@@ -3,12 +3,14 @@ Download Komoot tracks and highlights as GPX files with metadata
 
 [Python 3 or later](https://www.python.org/downloads/) is required.
 
+## Preparation
+
 Install dependencies
 ```
 pip install -r requirements.txt
 ```
 
-# Usage
+## Usage
 
 Run script in interactive mode
 ```
