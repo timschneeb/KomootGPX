@@ -27,10 +27,10 @@ Logging in...
 Logged in as 'thepbone'
 
 3331210XX => Example trip A (hike, 20.766km)
-3331210XX => Example trip B (hike, 13.863km)
+3331214XX => Example trip B (hike, 13.863km)
 
 Enter a tour id to download
->333314804
+>3331210XX
 
 Fetching tours of user '153434028XXX'...
 Fetching tour '33331210XX'...
