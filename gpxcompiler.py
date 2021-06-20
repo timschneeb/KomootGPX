@@ -55,49 +55,52 @@ class GpxCompiler:
             return
 
         self.pois = []
-        for item in tour["_embedded"]["timeline"]["_embedded"]["items"]:
-            if item["type"] != "poi" and item["type"] != "highlight":
-                continue
+        if "timeline" in tour["_embedded"]:
+            for item in tour["_embedded"]["timeline"]["_embedded"]["items"]:
+                if item["type"] != "poi" and item["type"] != "highlight":
+                    continue
 
-            ref = item["_embedded"]["reference"]
-            if item["type"] == "poi":
-                name = "Unknown POI"
-                point = Point({})
-                details = ""
+                ref = item["_embedded"]["reference"]
+                if item["type"] == "poi":
+                    name = "Unknown POI"
+                    point = Point({})
+                    details = ""
 
-                if "name" in ref:
-                    name = ref["name"]
-                if "location" in ref:
-                    point = Point(ref["location"])
-                if "details" in ref:
-                    details = ', '.join(str(x['formatted']) for x in ref['details'])
+                    if "name" in ref:
+                        name = ref["name"]
+                    if "location" in ref:
+                        point = Point(ref["location"])
+                    if "details" in ref:
+                        details = ', '.join(str(x['formatted']) for x in ref['details'])
 
-                self.pois.append(POI(name, point, '', '', details, "POI"))
+                    self.pois.append(POI(name, point, '', '', details, "POI"))
 
-            elif item["type"] == "highlight":
-                name = "Unknown Highlight"
-                point = Point({})
-                details = ""
-                image_url = ""
-                url = "https://www.komoot.de/highlight/" + str(ref["id"])
+                elif item["type"] == "highlight":
+                    name = "Unknown Highlight"
+                    point = Point({})
+                    details = ""
+                    image_url = ""
+                    url = "https://www.komoot.de/highlight/" + str(ref["id"])
 
-                if "name" in ref:
-                    name = ref["name"]
-                if "mid_point" in ref:
-                    point = Point(ref["mid_point"])
-                if "front_image" in ref["_embedded"]:
-                    if "src" in ref["_embedded"]["front_image"]:
-                        image_url = ref["_embedded"]["front_image"]["src"].split("?", 1)[0]
+                    if "name" in ref:
+                        name = ref["name"]
+                    if "mid_point" in ref:
+                        point = Point(ref["mid_point"])
+                    if "front_image" in ref["_embedded"]:
+                        if "src" in ref["_embedded"]["front_image"]:
+                            image_url = ref["_embedded"]["front_image"]["src"].split("?", 1)[0]
 
-                tips = self.api.fetch_highlight_tips(str(ref["id"]))
-                if "_embedded" in tips and "items" in tips["_embedded"]:
-                    details += "\n――――――――――\n".join(str(extract_user_from_tip(x) + x["text"]) for x in tips["_embedded"]["items"])
+                    tips = self.api.fetch_highlight_tips(str(ref["id"]))
+                    if "_embedded" in tips and "items" in tips["_embedded"]:
+                        details += "\n――――――――――\n".join(str(extract_user_from_tip(x) + x["text"]) for x in tips["_embedded"]["items"])
 
-                self.pois.append(POI(name, point, image_url, url, details, "Highlight"))
+                    self.pois.append(POI(name, point, image_url, url, details, "Highlight"))
 
     def generate(self):
         gpx = gpxpy.gpx.GPX()
         gpx.name = self.tour["name"]
+        if self.tour['type'] == "tour_recorded":
+            gpx.name = gpx.name + " (Completed)"
         gpx.description = f"Distance: {str(int(self.tour['distance']) / 1000.0)}km, " \
                           f"Estimated duration: {str(round(self.tour['duration'] / 3600.0, 2))}h, " \
                           f"Elevation up: {self.tour['elevation_up']}m, " \
