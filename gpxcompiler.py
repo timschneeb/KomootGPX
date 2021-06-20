@@ -55,7 +55,7 @@ class GpxCompiler:
             return
 
         self.pois = []
-        if "timeline" in tour["_embedded"]:
+        if "timeline" in tour["_embedded"] and "_embedded" in tour["_embedded"]["timeline"]:
             for item in tour["_embedded"]["timeline"]["_embedded"]["items"]:
                 if item["type"] != "poi" and item["type"] != "highlight":
                     continue
@@ -104,8 +104,10 @@ class GpxCompiler:
         gpx.description = f"Distance: {str(int(self.tour['distance']) / 1000.0)}km, " \
                           f"Estimated duration: {str(round(self.tour['duration'] / 3600.0, 2))}h, " \
                           f"Elevation up: {self.tour['elevation_up']}m, " \
-                          f"Elevation down: {self.tour['elevation_down']}m, " \
-                          f"Grade: {self.tour['difficulty']['grade']}"
+                          f"Elevation down: {self.tour['elevation_down']}m" \
+
+        if "difficulty" in self.tour:
+            gpx.description = gpx.description + f", Grade: {self.tour['difficulty']['grade']}"
 
         gpx.author_name = self.tour["_embedded"]["creator"]["display_name"]
         gpx.author_link = "https://www.komoot.de/user/" + str(self.tour["_embedded"]["creator"]["username"])
