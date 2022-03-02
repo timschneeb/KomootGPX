@@ -30,7 +30,7 @@ def make_gpx(tour_id, api, output_dir, no_poi):
     tour = api.fetch_tour(str(tour_id))
     gpx = GpxCompiler(tour, api, no_poi)
 
-    path = f"{output_dir}/{sanitize_filename(tour['name'])}.gpx"
+    path = f"{output_dir}/{sanitize_filename(tour['name'])}-{tour_id}.gpx"
     f = open(path, "w", encoding="utf-8")
     f.write(gpx.generate())
     f.close()
