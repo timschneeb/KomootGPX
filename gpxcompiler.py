@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import gpxpy.gpx
 
@@ -128,12 +128,18 @@ class GpxCompiler:
         segment = gpxpy.gpx.GPXTrackSegment()
         track.segments.append(segment)
 
+        augment_timestamp = self.route[0].time == 0
+        start_date = datetime.strptime(self.tour['date'], "%Y-%m-%dT%H:%M:%S.%f%z")
+
         for coord in self.route:
             point = gpxpy.gpx.GPXTrackPoint(coord.lat, coord.lng)
             if coord.alt != coord.CONST_UNDEFINED:
                 point.elevation = coord.alt
             if coord.time != coord.CONST_UNDEFINED:
-                point.time = datetime.fromtimestamp(coord.time / 1000)
+                if augment_timestamp:
+                    point.time = start_date + timedelta(seconds=coord.time / 1000)
+                else:
+                    point.time = datetime.fromtimestamp(coord.time / 1000)
             segment.points.append(point)
 
         if not self.no_poi:
