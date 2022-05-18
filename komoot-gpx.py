@@ -61,7 +61,7 @@ def main(argv):
         elif opt in ("-l", "--list-tours"):
             print_tours = True
 
-        elif opt in ("-e", "no-poi"):
+        elif opt in ("-e", "--no-poi"):
             no_poi = True
 
         elif opt in ("-d", "--make-gpx"):
