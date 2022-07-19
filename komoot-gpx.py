@@ -22,8 +22,8 @@ def usage():
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-d', '--make-gpx=tour_id', 'Download tour as GPX'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-a', '--make-all', 'Download all tours'))
     print(bcolor.OKBLUE + '[Filters]' + bcolor.ENDC)
-    print('\t{:<2s}, {:<30s} {:<10s}'.format('f', '--filter=type', 'Filter by track type (either "planned" or '
-                                                                   '"recorded")'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-f', '--filter=type', 'Filter by track type (either "planned" or '
+                                                                    '"recorded")'))
     print(bcolor.OKBLUE + '[Generator]' + bcolor.ENDC)
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-o', '--output', 'Output directory (default: working directory)'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-e', '--no-poi', 'Do not include highlights as POIs'))
@@ -50,10 +50,10 @@ def main(argv):
     typeFilter = "all"
     output_dir = os.getcwd()
 
-    #try:
+    # try:
     opts, args = getopt.getopt(argv, "hle:o:d:m:p:f:", ["list-tours", "make-gpx=", "mail=",
-                                                            "pass=", "filter=", "no-poi", "output=", "make-all"])
-    #except getopt.GetoptError:
+                                                        "pass=", "filter=", "no-poi", "output=", "make-all"])
+    # except getopt.GetoptError:
     #    usage()
     #    sys.exit(2)
 
