@@ -21,6 +21,9 @@ def usage():
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-l', '--list-tours', 'List all tours of the logged in user'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-d', '--make-gpx=tour_id', 'Download tour as GPX'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-a', '--make-all', 'Download all tours'))
+    print(bcolor.OKBLUE + '[Filters]' + bcolor.ENDC)
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('f', '--filter=type', 'Filter by track type (either "planned" or '
+                                                                   '"recorded")'))
     print(bcolor.OKBLUE + '[Generator]' + bcolor.ENDC)
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-o', '--output', 'Output directory (default: working directory)'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-e', '--no-poi', 'Do not include highlights as POIs'))
@@ -44,19 +47,23 @@ def main(argv):
     pwd = ''
     print_tours = False
     no_poi = False
+    typeFilter = "all"
     output_dir = os.getcwd()
 
-    try:
-        opts, args = getopt.getopt(argv, "hle:o:d:m:p:", ["list-tours", "make-gpx=", "mail=",
-                                                          "pass=", "no-poi", "output=", "make-all"])
-    except getopt.GetoptError:
-        usage()
-        sys.exit(2)
+    #try:
+    opts, args = getopt.getopt(argv, "hle:o:d:m:p:f:", ["list-tours", "make-gpx=", "mail=",
+                                                            "pass=", "filter=", "no-poi", "output=", "make-all"])
+    #except getopt.GetoptError:
+    #    usage()
+    #    sys.exit(2)
 
     for opt, arg in opts:
         if opt == '-h':
             usage()
             sys.exit()
+
+        elif opt in "--filter":
+            typeFilter = "tour_" + str(arg)
 
         elif opt in ("-l", "--list-tours"):
             print_tours = True
@@ -89,18 +96,18 @@ def main(argv):
     api.login(mail, pwd)
 
     if tour_selection == "":
-        api.print_tours()
+        api.print_tours(typeFilter)
         tour_selection = prompt("Enter a tour id to download")
 
     if print_tours:
-        api.print_tours()
+        api.print_tours(typeFilter)
         exit(0)
 
-    tours = api.fetch_tours()
+    tours = api.fetch_tours(typeFilter)
 
     if tour_selection != "all" and int(tour_selection) not in tours:
         print_error("Unknown tour id selected. These are all available tours on your profile:")
-        api.print_tours()
+        api.print_tours(typeFilter)
         exit(0)
 
     if tour_selection == "all":
