@@ -119,4 +119,9 @@ def main(argv):
 
 
 if __name__ == "__main__":
-    main(sys.argv[1:])
+    try:
+        main(sys.argv[1:])
+    except KeyboardInterrupt:
+        print()
+        print_error("Aborted by user")
+        exit(1)

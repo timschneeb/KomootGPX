@@ -51,17 +51,25 @@ class KomootApi:
         if not silent:
             print("Fetching tours of user '" + self.user_id + "'...")
 
-        r = self.__send_request("https://api.komoot.de/v007/users/" + self.user_id + "/tours/",
-                                BasicAuthToken(self.user_id, self.token))
-
         results = {}
-        tours = r.json()['_embedded']['tours']
-        for tour in tours:
-            if tourType != "all" and tourType != tour['type']:
-                continue
-            results[tour['id']] = tour['name'] + " (" + tour['sport'] + "; " + str(
-                int(tour['distance']) / 1000.0) + "km; " + tour['type'] + ")"
+        has_next_page = True
+        current_uri = "https://api.komoot.de/v007/users/" + self.user_id + "/tours/"
+        while has_next_page:
+            r = self.__send_request(current_uri,
+                                    BasicAuthToken(self.user_id, self.token))
 
+            has_next_page = 'next' in r.json()['_links'] and 'href' in r.json()['_links']['next']
+            if has_next_page:
+                current_uri = r.json()['_links']['next']['href']
+
+            tours = r.json()['_embedded']['tours']
+            for tour in tours:
+                if tourType != "all" and tourType != tour['type']:
+                    continue
+                results[tour['id']] = tour['name'] + " (" + tour['sport'] + "; " + str(
+                    int(tour['distance']) / 1000.0) + "km; " + tour['type'] + ")"
+
+        print("Found " + str(len(results)) + " tours")
         return results
 
     def print_tours(self, tourType="all"):
