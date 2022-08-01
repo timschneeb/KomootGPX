@@ -50,12 +50,12 @@ def main(argv):
     typeFilter = "all"
     output_dir = os.getcwd()
 
-    # try:
-    opts, args = getopt.getopt(argv, "hle:o:d:m:p:f:", ["list-tours", "make-gpx=", "mail=",
+    try:
+        opts, args = getopt.getopt(argv, "hle:o:d:m:p:f:", ["list-tours", "make-gpx=", "mail=",
                                                         "pass=", "filter=", "no-poi", "output=", "make-all"])
-    # except getopt.GetoptError:
-    #    usage()
-    #    sys.exit(2)
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
 
     for opt, arg in opts:
         if opt == '-h':
