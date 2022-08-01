@@ -26,8 +26,8 @@ Password:
 Logging in...
 Logged in as 'thepbone'
 
-3331210XX => Example trip A (hike, 20.766km)
-3331214XX => Example trip B (hike, 13.863km)
+3331210XX => Example trip A (hike; 20.766km; tour_recorded)
+3331214XX => Example trip B (hike; 13.863km; tour_planned)
 
 Enter a tour id to download
 >3331210XX
@@ -38,7 +38,7 @@ Fetching highlight '2635XX'...
 Fetching highlight '15840XX'...
 Fetching highlight '20981XX'...
 Fetching highlight '875XX'...
-GPX file written to 'D:\Development\KomootGPX\Example trip A.gpx'
+GPX file written to 'D:\Development\KomootGPX\Example trip A-3331210XX.gpx'
 ```
 
 Display advanced usage information
@@ -54,6 +54,8 @@ komoot-gpx.py [options]
         -l, --list-tours                   List all tours of the logged in user
         -d, --make-gpx=tour_id             Download tour as GPX
         -a, --make-all                     Download all tours
+[Filters]
+        -f, --filter=type                  Filter by track type (either "planned" or "recorded")
 [Generator]
         -o, --output                       Output directory (default: working directory)
         -e, --no-poi                       Do not include highlights as POIs
