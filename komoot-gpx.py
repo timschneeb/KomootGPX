@@ -21,6 +21,7 @@ def usage():
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-l', '--list-tours', 'List all tours of the logged in user'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-d', '--make-gpx=tour_id', 'Download tour as GPX'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-a', '--make-all', 'Download all tours'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-D', '--add-date', 'Add date to file name'))
     print(bcolor.OKBLUE + '[Filters]' + bcolor.ENDC)
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-f', '--filter=type', 'Filter by track type (either "planned" or '
                                                                     '"recorded")'))
@@ -56,7 +57,7 @@ def main(argv):
     output_dir = os.getcwd()
 
     try:
-        opts, args = getopt.getopt(argv, "hle:o:d:m:p:f:", ["list-tours", "make-gpx=", "mail=",
+        opts, args = getopt.getopt(argv, "ahleDo:d:m:p:f:", ["add-date", "list-tours", "make-gpx=", "mail=",
                                                         "pass=", "filter=", "no-poi", "output=", "make-all"])
     except getopt.GetoptError:
         usage()
@@ -75,6 +76,9 @@ def main(argv):
 
         elif opt in ("-e", "--no-poi"):
             no_poi = True
+
+        elif opt in ("-D", "--add-date"):
+            add_date = True
 
         elif opt in ("-d", "--make-gpx"):
             tour_selection = str(arg)
