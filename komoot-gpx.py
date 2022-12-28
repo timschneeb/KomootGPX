@@ -29,11 +29,15 @@ def usage():
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-e', '--no-poi', 'Do not include highlights as POIs'))
 
 
-def make_gpx(tour_id, api, output_dir, no_poi):
+def make_gpx(tour_id, api, output_dir, no_poi, add_date):
     tour = api.fetch_tour(str(tour_id))
     gpx = GpxCompiler(tour, api, no_poi)
 
-    path = f"{output_dir}/{sanitize_filename(tour['name'])}-{tour_id}.gpx"
+    # Example date: 2022-01-02T12:26:41.795+01:00
+    # :10 extracts "2022-01-02" from this.
+    date_str = tour['date'][:10]+'_' if add_date else ''
+
+    path = f"{output_dir}/{date_str}{sanitize_filename(tour['name'])}-{tour_id}.gpx"
     f = open(path, "w", encoding="utf-8")
     f.write(gpx.generate())
     f.close()
@@ -47,6 +51,7 @@ def main(argv):
     pwd = ''
     print_tours = False
     no_poi = False
+    add_date = False
     typeFilter = "all"
     output_dir = os.getcwd()
 
@@ -112,9 +117,9 @@ def main(argv):
 
     if tour_selection == "all":
         for x in tours:
-            make_gpx(x, api, output_dir, no_poi)
+            make_gpx(x, api, output_dir, no_poi, add_date)
     else:
-        make_gpx(tour_selection, api, output_dir, no_poi)
+        make_gpx(tour_selection, api, output_dir, no_poi, add_date)
     print()
 
 
