@@ -4,11 +4,10 @@ Download Komoot tracks and highlights as GPX files with metadata
 [Python 3 or later](https://www.python.org/downloads/) is required.
 
 ## Installation
-
+Download from [PyPI](https://pypi.org/project/komootgpx/):
 ```
 pip install komootgpx
 ```
-
 ## Usage
 
 Run script in interactive mode
