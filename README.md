@@ -3,18 +3,17 @@ Download Komoot tracks and highlights as GPX files with metadata
 
 [Python 3 or later](https://www.python.org/downloads/) is required.
 
-## Preparation
+## Installation
 
-Install dependencies
 ```
-pip install -r requirements.txt
+pip install komootgpx
 ```
 
 ## Usage
 
 Run script in interactive mode
 ```
-python komoot-gpx.py
+komootgpx
 ```
 ```
 Enter your mail address (komoot.de)
@@ -36,17 +35,15 @@ Fetching tours of user '153434028XXX'...
 Fetching tour '3331210XX'...
 Fetching highlight '2635XX'...
 Fetching highlight '15840XX'...
-Fetching highlight '20981XX'...
-Fetching highlight '875XX'...
-GPX file written to 'D:\Development\KomootGPX\Example trip A-3331210XX.gpx'
+GPX file written to '~/Development/KomootGPX/Example trip A-3331210XX.gpx'
 ```
 
 Display advanced usage information
 ```
-python komoot-gpx.py --help
+komootgpx --help
 ```
 ```
-komoot-gpx.py [options]
+komootgpx.py [options]
 [Authentication]
         -m, --mail=mail_address            Login using specified email address
         -p, --pass=password                Use provided password and skip interactive prompt
@@ -54,6 +51,7 @@ komoot-gpx.py [options]
         -l, --list-tours                   List all tours of the logged in user
         -d, --make-gpx=tour_id             Download tour as GPX
         -a, --make-all                     Download all tours
+        -D, --add-date                     Add date to file name
 [Filters]
         -f, --filter=type                  Filter by track type (either "planned" or "recorded")
 [Generator]
