@@ -4,15 +4,16 @@ import sys
 
 from colorama import init
 
-from api import *
-from gpxcompiler import *
-from utils import *
+from .api import *
+from .gpxcompiler import *
+from .utils import *
 
 init()
+interactive_info_shown = False
 
 
 def usage():
-    print(bcolor.HEADER + bcolor.BOLD + 'komoot-gpx.py [options]' + bcolor.ENDC)
+    print(bcolor.HEADER + bcolor.BOLD + 'komootgpx.py [options]' + bcolor.ENDC)
     print(bcolor.OKBLUE + '[Authentication]' + bcolor.ENDC)
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-m', '--mail=mail_address', 'Login using specified email address'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-p', '--pass=password',
@@ -28,6 +29,13 @@ def usage():
     print(bcolor.OKBLUE + '[Generator]' + bcolor.ENDC)
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-o', '--output', 'Output directory (default: working directory)'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-e', '--no-poi', 'Do not include highlights as POIs'))
+
+
+def notify_interactive():
+    global interactive_info_shown
+    interactive_info_shown = True
+    if interactive_info_shown:
+        print("Interactive mode. Use '--help' for usage details.")
 
 
 def make_gpx(tour_id, api, output_dir, no_poi, add_date):
@@ -96,15 +104,18 @@ def main(argv):
             tour_selection = "all"
 
     if mail == "":
+        notify_interactive()
         mail = prompt("Enter your mail address (komoot.de)")
 
     if pwd == "":
+        notify_interactive()
         pwd = prompt_pass("Enter your password (input hidden)")
 
     api = KomootApi()
     api.login(mail, pwd)
 
     if tour_selection == "":
+        notify_interactive()
         api.print_tours(typeFilter)
         tour_selection = prompt("Enter a tour id to download")
 
@@ -127,9 +138,9 @@ def main(argv):
     print()
 
 
-if __name__ == "__main__":
+def entrypoint():
     try:
-        main(sys.argv[1:])
+        return main(sys.argv[1:])
     except KeyboardInterrupt:
         print()
         print_error("Aborted by user")

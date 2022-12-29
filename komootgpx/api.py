@@ -1,7 +1,7 @@
 import base64
 import requests
 
-from utils import print_error, bcolor
+from .utils import print_error, bcolor
 
 
 class BasicAuthToken(requests.auth.AuthBase):

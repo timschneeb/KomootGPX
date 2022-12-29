@@ -1,6 +1,4 @@
 import getpass
-import string
-import unicodedata
 
 
 class bcolor:
