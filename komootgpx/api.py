@@ -21,11 +21,9 @@ class KomootApi:
         self.token = ''
 
     def __build_header(self):
-        if self.user_id != '' and self.token != '':
-            return {
-                "Authorization": "Basic {0}".format(
-                    base64.b64encode(bytes(self.user_id + ":" + self.token, 'utf-8')).decode())}
-        return {}
+        if self.user_id and self.token:
+            return BasicAuthToken(self.user_id, self.token)
+        return None
 
     @staticmethod
     def __send_request(url, auth, critical=True):
@@ -55,8 +53,7 @@ class KomootApi:
         has_next_page = True
         current_uri = "https://api.komoot.de/v007/users/" + self.user_id + "/tours/"
         while has_next_page:
-            r = self.__send_request(current_uri,
-                                    BasicAuthToken(self.user_id, self.token))
+            r = self.__send_request(current_uri, self.__build_header())
 
             has_next_page = 'next' in r.json()['_links'] and 'href' in r.json()['_links']['next']
             if has_next_page:
@@ -90,7 +87,7 @@ class KomootApi:
                                                                                 "=timeline&format=coordinate_array"
                                                                                 "&timeline_highlights_fields=tips,"
                                                                                 "recommenders",
-                                BasicAuthToken(self.user_id, self.token))
+                                self.__build_header())
 
         return r.json()
 
@@ -98,6 +95,6 @@ class KomootApi:
         print("Fetching highlight '" + highlight_id + "'...")
 
         r = self.__send_request("https://api.komoot.de/v007/highlights/" + highlight_id + "/tips/",
-                                BasicAuthToken(self.user_id, self.token), critical=False)
+                                self.__build_header(), critical=False)
 
         return r.json()

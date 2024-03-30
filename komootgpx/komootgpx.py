@@ -103,6 +103,11 @@ def main(argv):
         elif opt in ("-a", "--make-all"):
             tour_selection = "all"
 
+    if tour_selection and tour_selection != "all":
+        api = KomootApi()
+        make_gpx(tour_selection, api, output_dir, no_poi, add_date)
+        return
+
     if mail == "":
         notify_interactive()
         mail = prompt("Enter your mail address (komoot.de)")
