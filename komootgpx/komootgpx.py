@@ -29,6 +29,7 @@ def usage():
     print(bcolor.OKBLUE + '[Generator]' + bcolor.ENDC)
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-o', '--output', 'Output directory (default: working directory)'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-e', '--no-poi', 'Do not include highlights as POIs'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-s', '--skip-existing', 'Do not download and save GPX if the file already exists, ignored with -d'))
 
 
 def notify_interactive():
@@ -38,15 +39,20 @@ def notify_interactive():
         print("Interactive mode. Use '--help' for usage details.")
 
 
-def make_gpx(tour_id, api, output_dir, no_poi, add_date):
-    tour = api.fetch_tour(str(tour_id))
-    gpx = GpxCompiler(tour, api, no_poi)
-
+def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, tour, add_date):
     # Example date: 2022-01-02T12:26:41.795+01:00
     # :10 extracts "2022-01-02" from this.
     date_str = tour['date'][:10]+'_' if add_date else ''
 
     path = f"{output_dir}/{date_str}{sanitize_filename(tour['name'])}-{tour_id}.gpx"
+
+    if skip_existing and os.path.exists(path):
+        print_success(f"{tour['name']} skipped - already exists at '{path}'")
+        return
+
+    tour = api.fetch_tour(str(tour_id))
+    gpx = GpxCompiler(tour, api, no_poi)
+
     f = open(path, "w", encoding="utf-8")
     f.write(gpx.generate())
     f.close()
@@ -60,13 +66,14 @@ def main(argv):
     pwd = ''
     print_tours = False
     no_poi = False
+    skip_existing = False
     add_date = False
     typeFilter = "all"
     output_dir = os.getcwd()
 
     try:
-        opts, args = getopt.getopt(argv, "ahleDo:d:m:p:f:", ["add-date", "list-tours", "make-gpx=", "mail=",
-                                                        "pass=", "filter=", "no-poi", "output=", "make-all"])
+        opts, args = getopt.getopt(argv, "ahlesDo:d:m:p:f:", ["add-date", "list-tours", "make-gpx=", "mail=",
+                                                        "pass=", "filter=", "no-poi", "output=", "skip-existing", "make-all"])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -84,6 +91,9 @@ def main(argv):
 
         elif opt in ("-e", "--no-poi"):
             no_poi = True
+
+        elif opt in ("-s", "--skip-existing"):
+            skip_existing = True
 
         elif opt in ("-D", "--add-date"):
             add_date = True
@@ -105,7 +115,7 @@ def main(argv):
 
     if tour_selection and tour_selection != "all":
         api = KomootApi()
-        make_gpx(tour_selection, api, output_dir, no_poi, add_date)
+        make_gpx(tour_selection, api, output_dir, no_poi, False, None, add_date)
         return
 
     if mail == "":
@@ -137,9 +147,9 @@ def main(argv):
 
     if tour_selection == "all":
         for x in tours:
-            make_gpx(x, api, output_dir, no_poi, add_date)
+            make_gpx(x, api, output_dir, no_poi, skip_existing, tours[x], add_date)
     else:
-        make_gpx(tour_selection, api, output_dir, no_poi, add_date)
+        make_gpx(tour_selection, api, output_dir, no_poi, skip_existing, tours[tour_selection], add_date)
     print()
 
 

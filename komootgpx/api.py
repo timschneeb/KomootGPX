@@ -63,8 +63,7 @@ class KomootApi:
             for tour in tours:
                 if tourType != "all" and tourType != tour['type']:
                     continue
-                results[tour['id']] = tour['name'] + " (" + tour['sport'] + "; " + str(
-                    int(tour['distance']) / 1000.0) + "km; " + tour['type'] + ")"
+                results[tour['id']] = tour;
 
         print("Found " + str(len(results)) + " tours")
         return results
@@ -72,8 +71,9 @@ class KomootApi:
     def print_tours(self, tourType="all"):
         tours = self.fetch_tours(tourType, silent=True)
         print()
-        for tour_id, name in tours.items():
-            print(bcolor.BOLD + bcolor.HEADER + str(tour_id) + bcolor.ENDC + " => " + bcolor.BOLD + name + bcolor.ENDC)
+        for tour_id, tour in tours.items():
+            descr =  tour['name'] + " (" + tour['sport'] + "; " + str(int(tour['distance']) / 1000.0) + "km; " + tour['type'] + ")"
+            print(bcolor.BOLD + bcolor.HEADER + str(tour_id) + bcolor.ENDC + " => " + bcolor.BOLD + descr + bcolor.ENDC)
 
         if len(tours) < 1:
             print_error("No tours found on your profile")
