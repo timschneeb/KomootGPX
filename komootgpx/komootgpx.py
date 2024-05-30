@@ -33,6 +33,7 @@ def usage():
     print(bcolor.OKBLUE + '[Generator]' + bcolor.ENDC)
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-o', '--output', 'Output directory (default: working directory)'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-e', '--no-poi', 'Do not include highlights as POIs'))
+    print('\t{:<30s} {:<10s}'.format('--max-desc-length=count', 'Limit description length in characters (default: -1 = no limit)'))
 
 
 def notify_interactive():
@@ -42,7 +43,7 @@ def notify_interactive():
         print("Interactive mode. Use '--help' for usage details.")
 
 
-def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, tour_base, add_date):
+def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, tour_base, add_date, max_desc_length):
     tour = None
     if tour_base is None:
         tour_base = api.fetch_tour(str(tour_id))
@@ -60,7 +61,7 @@ def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, tour_base, add_dat
 
     if tour is None:
         tour = api.fetch_tour(str(tour_id))
-    gpx = GpxCompiler(tour, api, no_poi)
+    gpx = GpxCompiler(tour, api, no_poi, max_desc_length)
 
     f = open(path, "w", encoding="utf-8")
     f.write(gpx.generate())
@@ -78,12 +79,14 @@ def main(argv):
     skip_existing = False
     add_date = False
     anonymous = False
+    max_desc_length = -1
     typeFilter = "all"
     output_dir = os.getcwd()
 
     try:
         opts, args = getopt.getopt(argv, "ahlesDno:d:m:p:f:",
-            ["add-date", "list-tours", "make-gpx=", "mail=", "pass=", "filter=", "no-poi", "output=", "skip-existing", "make-all", "anonymous"])
+            ["add-date", "list-tours", "make-gpx=", "mail=", "pass=", "filter=", "no-poi", "output=", "skip-existing",
+             "make-all", "anonymous", "max-desc-length="])
     except getopt.GetoptError:
         usage()
         sys.exit(2)
@@ -125,6 +128,9 @@ def main(argv):
 
         elif opt in ("-a", "--make-all"):
             tour_selection = "all"
+            
+        elif opt in "--max-desc-length":
+            max_desc_length = int(arg)
 
 
     if anonymous and tour_selection == "all":
@@ -165,15 +171,15 @@ def main(argv):
 
     if tour_selection == "all":
         for x in tours:
-            make_gpx(x, api, output_dir, no_poi, skip_existing, tours[x], add_date)
+            make_gpx(x, api, output_dir, no_poi, skip_existing, tours[x], add_date, max_desc_length)
     else:
         if anonymous:
-            make_gpx(tour_selection, api, output_dir, no_poi, False, None, add_date)
+            make_gpx(tour_selection, api, output_dir, no_poi, False, None, add_date, max_desc_length)
         else:
             if int(tour_selection) in tours:
-                make_gpx(tour_selection, api, output_dir, no_poi, skip_existing, tours[int(tour_selection)], add_date)
+                make_gpx(tour_selection, api, output_dir, no_poi, skip_existing, tours[int(tour_selection)], add_date, max_desc_length)
             else:
-                make_gpx(tour_selection, api, output_dir, no_poi, skip_existing, None, add_date)
+                make_gpx(tour_selection, api, output_dir, no_poi, skip_existing, None, add_date, max_desc_length)
     print()
 
 

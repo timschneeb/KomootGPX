@@ -42,7 +42,7 @@ def extract_user_from_tip(json):
 
 
 class GpxCompiler:
-    def __init__(self, tour, api, no_poi=False):
+    def __init__(self, tour, api, no_poi=False, max_desc_length=-1):
         self.api = api
         self.tour = tour
         self.no_poi = no_poi
@@ -93,6 +93,11 @@ class GpxCompiler:
                     tips = self.api.fetch_highlight_tips(str(ref["id"]))
                     if "_embedded" in tips and "items" in tips["_embedded"]:
                         details += "\n――――――――――\n".join(str(extract_user_from_tip(x) + x["text"]) for x in tips["_embedded"]["items"])
+
+                    if max_desc_length == 0:
+                        details = ""
+                    elif max_desc_length > 0 and len(details) > max_desc_length:
+                        details = details[:max_desc_length - 3] + "..."
 
                     self.pois.append(POI(name, point, image_url, url, details, "Highlight"))
 
