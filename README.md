@@ -56,4 +56,5 @@ komootgpx.py [options]
 [Generator]
         -o, --output                       Output directory (default: working directory)
         -e, --no-poi                       Do not include highlights as POIs
+        -s, --skip-existing                Do not download and save GPX if the file already exists, ignored with -d
 ```
