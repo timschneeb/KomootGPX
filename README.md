@@ -8,6 +8,13 @@ Download from [PyPI](https://pypi.org/project/komootgpx/):
 ```
 pip install komootgpx
 ```
+
+## Testing
+To run from local clone of repo (without installation):
+```
+python -m komootgpx --help
+```
+
 ## Usage
 
 Run script in interactive mode
