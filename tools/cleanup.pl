@@ -10,26 +10,20 @@
 
 use strict;
 use warnings;
-use Data::Dumper;
 my %h;
 my %fn;
 
-my @a = sort <*.gpx>;
-for (@a)
+for (sort <*.gpx>)
 {
     next unless m/^(\d\d\d\d-\d\d-\d\d).*-(\d+)\.gpx$/;
-    my $d = $1;
-    my $id = $2;
+    my ($d, $id) = ($1, $2);
 
-    if (!exists $h{$id})
+    if (exists $h{$id})
     {
-        $h{$id} = $d;
-        $fn{$id} = $_;
-        next;
+        print "unlink $id -> $h{$id}: $fn{$id}\n";
+        unlink $fn{$id} or die $!;
     }
 
-    print "unlink $id -> $h{$id}: $fn{$id}\n";
-    unlink $fn{$id} or die $!;
     $h{$id} = $d;
     $fn{$id} = $_;
 }
