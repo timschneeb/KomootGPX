@@ -40,6 +40,8 @@ def notify_interactive():
 
 
 def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, tour, add_date):
+    tour = api.fetch_tour(str(tour_id))
+
     # Example date: 2022-01-02T12:26:41.795+01:00
     # :10 extracts "2022-01-02" from this.
     date_str = tour['date'][:10]+'_' if add_date else ''
@@ -50,7 +52,6 @@ def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, tour, add_date):
         print_success(f"{tour['name']} skipped - already exists at '{path}'")
         return
 
-    tour = api.fetch_tour(str(tour_id))
     gpx = GpxCompiler(tour, api, no_poi)
 
     f = open(path, "w", encoding="utf-8")
