@@ -53,15 +53,19 @@ komootgpx.py [options]
 [Authentication]
         -m, --mail=mail_address            Login using specified email address
         -p, --pass=password                Use provided password and skip interactive prompt
+        -n, --anonymous                    Skip authentication, no interactive prompt, valid only with -d
+
 [Tours]
         -l, --list-tours                   List all tours of the logged in user
         -d, --make-gpx=tour_id             Download tour as GPX
         -a, --make-all                     Download all tours
+        -s, --skip-existing                Do not download and save GPX if the file already exists, ignored with -d
         -D, --add-date                     Add date to file name
+
 [Filters]
         -f, --filter=type                  Filter by track type (either "planned" or "recorded")
+
 [Generator]
         -o, --output                       Output directory (default: working directory)
         -e, --no-poi                       Do not include highlights as POIs
-        -s, --skip-existing                Do not download and save GPX if the file already exists, ignored with -d
 ```
