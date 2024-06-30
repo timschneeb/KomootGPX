@@ -17,7 +17,7 @@ python -m komootgpx --help
 
 ## Usage
 
-Run script in interactive mode
+### Run script in interactive mode
 ```
 komootgpx
 ```
@@ -44,7 +44,7 @@ Fetching highlight '15840XX'...
 GPX file written to '~/Development/KomootGPX/Example trip A-3331210XX.gpx'
 ```
 
-Display advanced usage information
+### Display advanced usage information
 ```
 komootgpx --help
 ```
@@ -69,3 +69,11 @@ komootgpx.py [options]
         -o, --output                       Output directory (default: working directory)
         -e, --no-poi                       Do not include highlights as POIs
 ```
+
+### Authentication
+It's required to be properly authenticated with username (email) and password to perform most of available operations:
+ * list user's tours (both planned and completed)
+ * download all tours
+ * download tour that has Visibility set to "Only me" or "Close friends"
+
+Without authentication you can download any tour that is public (i.e. Visibility set to "Anyone"). To disable authentication use `--anonymous` option.
