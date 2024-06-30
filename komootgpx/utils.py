@@ -26,6 +26,8 @@ def print_error(text):
 def print_success(text):
     print(bcolor.OKGREEN + text + bcolor.ENDC)
 
+def print_warning(text):
+    print(bcolor.WARNING + text + bcolor.ENDC)
 
 def prompt(title):
     print()
