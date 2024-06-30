@@ -17,9 +17,8 @@ def usage():
 
     print(bcolor.OKBLUE + '[Authentication]' + bcolor.ENDC)
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-m', '--mail=mail_address', 'Login using specified email address'))
-    print('\t{:<2s}, {:<30s} {:<10s}'.format('-p', '--pass=password',
-                                             'Use provided password and skip interactive prompt'))
-    print('\t{:<2s}, {:<30s} {:<10s}'.format('-n', '--anonymous', 'Skip authentication, valid only with -d'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-p', '--pass=password', 'Use provided password and skip interactive prompt'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-n', '--anonymous', 'Skip authentication, no interactive prompt, valid only with -d'))
 
     print(bcolor.OKBLUE + '[Tours]' + bcolor.ENDC)
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-l', '--list-tours', 'List all tours of the logged in user'))
@@ -29,8 +28,8 @@ def usage():
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-D', '--add-date', 'Add date to file name'))
 
     print(bcolor.OKBLUE + '[Filters]' + bcolor.ENDC)
-    print('\t{:<2s}, {:<30s} {:<10s}'.format('-f', '--filter=type', 'Filter by track type (either "planned" or '
-                                                                    '"recorded")'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-f', '--filter=type', 'Filter by track type (either "planned" or "recorded")'))
+
     print(bcolor.OKBLUE + '[Generator]' + bcolor.ENDC)
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-o', '--output', 'Output directory (default: working directory)'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-e', '--no-poi', 'Do not include highlights as POIs'))
