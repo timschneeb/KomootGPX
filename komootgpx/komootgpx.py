@@ -140,7 +140,7 @@ def main(argv):
     if not anonymous:
         if mail == "":
             notify_interactive()
-            mail = prompt("Enter your mail address (komoot.de)")
+            mail = prompt("Enter your mail address (komoot login)")
 
         if pwd == "":
             notify_interactive()
