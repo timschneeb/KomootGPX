@@ -156,7 +156,8 @@ def main(argv):
 
     if tour_selection == "":
         notify_interactive()
-        api.print_tours(typeFilter)
+        if not anonymous:
+            api.print_tours(typeFilter)
         tour_selection = prompt("Enter a tour id to download")
 
     if not anonymous and tour_selection != "all" and int(tour_selection) not in tours:
