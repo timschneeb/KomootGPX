@@ -77,3 +77,6 @@ It's required to be properly authenticated with username (email) and password to
  * download tour that has Visibility set to "Only me" or "Close friends"
 
 Without authentication you can download any tour that is public (i.e. Visibility set to "Anyone"). To disable authentication use `--anonymous` option.
+
+In case given tour id is not available without authentication you'll receive following message: `Error 403: {'status': 403, 'error': 'AccessDenied', 'message': 'Access denied without authentication.'}`.
+
