@@ -52,7 +52,7 @@ def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, tour_base, add_dat
     # :10 extracts "2022-01-02" from this.
     date_str = tour_base['date'][:10]+'_' if add_date else ''
 
-    path = f"{output_dir}/{date_str}{sanitize_filename(tour['name'])}-{tour_id}.gpx"
+    path = f"{output_dir}/{date_str}{sanitize_filename(tour_base['name'])}-{tour_id}.gpx"
 
     if skip_existing and os.path.exists(path):
         print_success(f"{tour_base['name']} skipped - already exists at '{path}'")
@@ -156,7 +156,8 @@ def main(argv):
 
     if tour_selection == "":
         notify_interactive()
-        api.print_tours(typeFilter)
+        if not anonymous:
+            api.print_tours(typeFilter)
         tour_selection = prompt("Enter a tour id to download")
 
     if not anonymous and tour_selection != "all" and int(tour_selection) not in tours:
@@ -170,7 +171,7 @@ def main(argv):
             make_gpx(tour_selection, api, output_dir, no_poi, False, None, add_date)
         else:
             if int(tour_selection) in tours:
-                make_gpx(tour_selection, api, output_dir, no_poi, skip_existing, tours[tour_selection], add_date)
+                make_gpx(tour_selection, api, output_dir, no_poi, skip_existing, tours[int(tour_selection)], add_date)
             else:
                 make_gpx(tour_selection, api, output_dir, no_poi, skip_existing, None, add_date)
     print()
