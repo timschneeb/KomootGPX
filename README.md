@@ -3,6 +3,14 @@ Download Komoot tracks and highlights as GPX files with metadata
 
 [Python 3 or later](https://www.python.org/downloads/) is required.
 
+Features
+* Download recorded & planned trips as GPX files
+* Bulk-download all trips stored in your profile (requires authentication)
+* Includes metadata such as estimated duration, total elevation, difficulty and the original Komoot trip URL
+* Can add trip highlights as POIs into the GPX file
+  * Includes user comments & image URLs for each highlight POI, as those often contain helpful information about the location
+
+
 ## Installation
 Download from [PyPI](https://pypi.org/project/komootgpx/):
 ```
