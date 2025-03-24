@@ -76,6 +76,7 @@ komootgpx.py [options]
 [Generator]
         -o, --output                       Output directory (default: working directory)
         -e, --no-poi                       Do not include highlights as POIs
+        --max-desc-length=count            Limit description length of POIs in characters (default: -1 = no limit)
 ```
 
 ### Authentication
