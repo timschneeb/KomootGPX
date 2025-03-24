@@ -14,7 +14,7 @@ from setuptools import find_packages, setup, Command
 # Package meta-data.
 NAME = 'komootgpx'
 DESCRIPTION = 'Download Komoot tracks and highlights as GPX files (including metadata). Supports bulk-download.'
-URL = 'https://github.com/thepbone/KomootGPX'
+URL = 'https://github.com/timschneeb/KomootGPX'
 EMAIL = 'tim.schneeberger@outlook.de'
 AUTHOR = 'Tim Schneeberger'
 REQUIRES_PYTHON = '>=3.6.0'
