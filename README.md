@@ -68,7 +68,9 @@ komootgpx.py [options]
         -d, --make-gpx=tour_id             Download tour as GPX
         -a, --make-all                     Download all tours
         -s, --skip-existing                Do not download and save GPX if the file already exists, ignored with -d
+        -I, --id-filename                  Use only tour id for filename (no title)
         -D, --add-date                     Add date to file name
+        --max-title-length=num             Crop title used in filename to given length (default: -1 = no limit)
 
 [Filters]
         -f, --filter=type                  Filter by track type (either "planned" or "recorded")
