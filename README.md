@@ -20,14 +20,14 @@ pip install komootgpx
 ## Testing
 To run from local clone of repo (without installation):
 ```
-python -m komootgpx --help
+uv run python -m komootgpx --help
 ```
 
 ## Usage
 
 ### Run script in interactive mode
 ```
-komootgpx
+uv run komootgpx
 ```
 ```
 Enter your mail address (komoot.de)

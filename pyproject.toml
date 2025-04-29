@@ -1,0 +1,46 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+#[tool.setuptools.dynamic]
+# read __version__ from the package at build time
+#version = {attr = "komootgpx.__version__"}
+#version = { file = "komootgpx/__version__.py" }
+
+[project]
+name = "komootgpx"
+#dynamic = ["version"]
+version = "1.3.3"
+description = "Download Komoot tracks and highlights as GPX files (including metadata). Supports bulk-download."
+readme = {file = "README.md", content-type = "text/markdown"}
+requires-python = ">=3.6.0"
+license = {text = "GPL-3.0"}
+authors = [
+  {name = "Tim Schneeberger", email = "tim.schneeberger@outlook.de"}
+]
+dependencies = [
+  "certifi",
+  "chardet",
+  "gpxpy",
+  "colorama",
+  "idna",
+  "requests",
+  "urllib3"
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: End Users/Desktop",
+  "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+  "Programming Language :: Python :: 3",
+  "Topic :: Internet",
+  "Topic :: System :: Archiving"
+]
+
+[project.urls]
+Homepage = "https://github.com/timschneeb/KomootGPX"
+
+[project.scripts]
+komootgpx = "komootgpx:entrypoint"
+
+[tool.setuptools]
+packages = ["komootgpx"]
