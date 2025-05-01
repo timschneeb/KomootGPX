@@ -9,6 +9,15 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "argparse"
+version = "1.4.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/18/dd/e617cfc3f6210ae183374cd9f6a26b20514bbb5a792af97949c5aacddf0f/argparse-1.4.0.tar.gz", hash = "sha256:62b089a55be1d8949cd2bc7e0df0bddb9e028faefc8c32038cc84862aefdd6e4", size = 70508, upload_time = "2015-09-12T20:22:16.217Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/f2/94/3af39d34be01a24a6e65433d19e107099374224905f1e0cc6bbe1fd22a2f/argparse-1.4.0-py2.py3-none-any.whl", hash = "sha256:c31647edb69fd3d465a847ea3157d37bed1f95f19760b11a47aa91c04b666314", size = 23000, upload_time = "2015-09-14T16:03:16.137Z" },
+]
+
+[[package]]
 name = "certifi"
 version = "2025.4.26"
 source = { registry = "https://pypi.org/simple" }
@@ -191,6 +200,7 @@ name = "komootgpx"
 version = "1.3.3"
 source = { editable = "." }
 dependencies = [
+    { name = "argparse" },
     { name = "certifi" },
     { name = "chardet", version = "5.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.7'" },
     { name = "chardet", version = "5.2.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.7'" },
@@ -208,6 +218,7 @@ dependencies = [
 
 [package.metadata]
 requires-dist = [
+    { name = "argparse" },
     { name = "certifi" },
     { name = "chardet" },
     { name = "colorama" },

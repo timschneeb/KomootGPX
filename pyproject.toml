@@ -19,6 +19,7 @@ authors = [
   {name = "Tim Schneeberger", email = "tim.schneeberger@outlook.de"}
 ]
 dependencies = [
+  "argparse",
   "certifi",
   "chardet",
   "gpxpy",

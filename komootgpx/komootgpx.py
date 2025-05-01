@@ -8,6 +8,8 @@ from .api import *
 from .gpxcompiler import *
 from .utils import *
 
+import argparse
+
 init()
 interactive_info_shown = False
 
@@ -80,76 +82,33 @@ def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, tour_base, add_dat
     print_success(f"GPX file written to '{path}'")
 
 
-def main(argv):
-    tour_selection = ''
-    mail = ''
-    pwd = ''
-    print_tours = False
-    no_poi = False
-    skip_existing = False
-    add_date = False
-    max_title_length = -1
-    anonymous = False
-    max_desc_length = -1
-    typeFilter = "all"
-    output_dir = os.getcwd()
+def main(args):
 
-    try:
-        opts, args = getopt.getopt(argv, "hm:p:nld:asIDf:o:e",
-            ["mail=", "pass=", "anonymous", "list-tours", "make-gpx=", "make-all", "skip-existing",
-            "id-filename",  "add-date", "max-title-length=", "filter=", 'output=', "no-poi",
-            "max-desc-length="])
-    except getopt.GetoptError:
+    tour_selection = "all" if args.make_all else args.make_gpx or ""
+    type_filter = f"tour_{args.tour_type}"
+    max_title_length = 0 if args.id_filename else args.max_title_length
+
+    if args.help:
         usage()
         sys.exit(2)
 
-    for opt, arg in opts:
-        if opt in ("-h", "--help"):
-            usage()
-            sys.exit(0)
+    mail = args.mail
+    pwd = args.pwd
+    anonymous = args.anonymous
+    print_tours = args.list_tours
+    tour_selection = args.make_gpx
+    skip_existing = args.skip_existing
 
-        elif opt in ("-m", "--mail"):
-            mail = str(arg)
+    if args.id_filename:
+        max_title_length = 0
+    elif args.max_title_length:
+        max_title_length = args.max_title_length
 
-        elif opt in ("-p", "--pass"):
-            pwd = str(arg)
+    max_desc_length = args.max_desc_length
 
-        elif opt in ("-n", "--anonymous"):
-            anonymous = True
-
-        elif opt in ("-l", "--list-tours"):
-            print_tours = True
-
-        elif opt in ("-d", "--make-gpx"):
-            tour_selection = str(arg)
-
-        elif opt in ("-a", "--make-all"):
-            tour_selection = "all"
-
-        elif opt in ("-s", "--skip-existing"):
-            skip_existing = True
-
-        elif opt in ("-I", "--id-filename"):
-            max_title_length = 0
-
-        elif opt in ("-D", "--add-date"):
-            add_date = True
-
-        elif opt in ("--max-title-length"):
-            max_title_length = int(arg)
-
-        elif opt in ("-f", "--filter"):
-            typeFilter = "tour_" + str(arg)
-
-        elif opt in ("-o", "--output"):
-            output_dir = str(arg)
-
-        elif opt in ("-e", "--no-poi"):
-            no_poi = True
-
-        elif opt in "--max-desc-length":
-            max_desc_length = int(arg)
-
+    add_date = args.add_date
+    output_dir = args.output
+    no_poi = args.no_poi
 
     if anonymous and tour_selection == "all":
         print_error("Cannot get all user's routes in anonymous mode, use -d")
@@ -162,26 +121,26 @@ def main(argv):
     api = KomootApi()
 
     if not anonymous:
-        if mail == "":
+        if mail is None:
             notify_interactive()
             mail = prompt("Enter your mail address (komoot login)")
 
-        if pwd == "":
+        if pwd is None:
             notify_interactive()
             pwd = prompt_pass("Enter your password (input hidden)")
 
         api.login(mail, pwd)
 
         if print_tours:
-            api.print_tours(typeFilter)
+            api.print_tours(type_filter)
             sys.exit(0)
 
-        tours = api.fetch_tours(typeFilter)
+        tours = api.fetch_tours(type_filter)
 
     if tour_selection == "":
         notify_interactive()
         if not anonymous:
-            api.print_tours(typeFilter)
+            api.print_tours(type_filter)
         tour_selection = prompt("Enter a tour id to download")
 
     if not anonymous and tour_selection != "all" and int(tour_selection) not in tours:
@@ -202,9 +161,35 @@ def main(argv):
 
 
 def entrypoint():
+    args = parse_args()
     try:
-        return main(sys.argv[1:])
+        return main(args)
     except KeyboardInterrupt:
         print()
         print_error("Aborted by user")
         sys.exit(1)
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Download Komoot tours and highlights as GPX files.",
+        # override the auto-created help to show usage() instead
+        add_help=False
+    )
+    parser.add_argument("-m", "--mail", type=str, help="Email address for login")
+    parser.add_argument("-p", "--pass", dest="pwd", type=str, help="Password for login")
+    parser.add_argument("-n", "--anonymous", action="store_true", default=False, help="Login anonymously")
+    parser.add_argument("-l", "--list-tours", action="store_true", help="Print available tours")
+    parser.add_argument("-d", "--make-gpx", type=int, help="Download GPX for selected tour")
+    parser.add_argument("-a", "--make-all", action="store_true", help="Download all tours")
+    parser.add_argument("-s", "--skip-existing", action="store_true", help="Skip already downloaded tours")
+    parser.add_argument("-I", "--id-filename", action="store_true",
+                        help="Use ID as filename (max title length = 0)")
+    parser.add_argument("-D", "--add-date", action="store_true", help="Add date to filename")
+    parser.add_argument("--max-title-length", type=int, default=-1, help="Maximum length for titles")
+    parser.add_argument("--max-desc-length", type=int, default=-1, help="Maximum length for descriptions")
+    parser.add_argument("--tour-type", choices=["planned", "recorded", "all"], default="all",
+                        help="Tour type to filter")
+    parser.add_argument("-o", "--output", type=str, default=os.getcwd(), help="Output directory")
+    parser.add_argument("-e", "--no-poi", action="store_true", help="Do not include POIs in GPX")
+    parser.add_argument("-h", "--help", action="store_true", help="Prints help")
+    return parser.parse_args()
