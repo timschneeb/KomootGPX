@@ -74,6 +74,8 @@ komootgpx.py [options]
 
 [Filters]
         -f, --filter=type                  Filter by track type (either "planned" or "recorded")
+        --start-date                       Filter tours on or after specified date (optional, format YYYY-MM-DD)
+        --end-date                         Filter tours on or before specified date (optional, format YYYY-MM-DD)
 
 [Generator]
         -o, --output                       Output directory (default: working directory)
