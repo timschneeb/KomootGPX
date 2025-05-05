@@ -2,15 +2,12 @@
 requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
-#[tool.setuptools.dynamic]
-# read __version__ from the package at build time
-#version = {attr = "komootgpx.__version__"}
-#version = { file = "komootgpx/__version__.py" }
+[tool.setuptools.dynamic]
+version = {attr = "komootgpx.__version__.__version__"}
 
 [project]
 name = "komootgpx"
-#dynamic = ["version"]
-version = "1.3.3"
+dynamic = ["version"]
 description = "Download Komoot tracks and highlights as GPX files (including metadata). Supports bulk-download."
 readme = {file = "README.md", content-type = "text/markdown"}
 requires-python = ">=3.6.0"

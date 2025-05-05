@@ -3,7 +3,6 @@ import requests
 
 from .utils import print_error, bcolor
 
-
 class BasicAuthToken(requests.auth.AuthBase):
     def __init__(self, key, value):
         self.key = key
@@ -45,7 +44,7 @@ class KomootApi:
 
         print("Logged in as '" + r.json()['user']['displayname'] + "'")
 
-    def fetch_tours(self, tourType="all", silent=False):
+    def fetch_tours(self, tour_type="all", silent=False):
         if not silent:
             print("Fetching tours of user '" + self.user_id + "'...")
 
@@ -61,22 +60,13 @@ class KomootApi:
 
             tours = r.json()['_embedded']['tours']
             for tour in tours:
-                if tourType != "all" and tourType != tour['type']:
+                if tour_type != "all" and tour_type != tour['type']:
                     continue
-                results[tour['id']] = tour;
+                results[tour['id']] = tour
 
         print("Found " + str(len(results)) + " tours")
         return results
 
-    def print_tours(self, tourType="all"):
-        tours = self.fetch_tours(tourType, silent=True)
-        print()
-        for tour_id, tour in tours.items():
-            descr =  tour['name'] + " (" + tour['sport'] + "; " + str(int(tour['distance']) / 1000.0) + "km; " + tour['type'] + ")"
-            print(bcolor.BOLD + bcolor.HEADER + str(tour_id) + bcolor.ENDC + " => " + bcolor.BOLD + descr + bcolor.ENDC)
-
-        if len(tours) < 1:
-            print_error("No tours found on your profile")
 
     def fetch_tour(self, tour_id):
         print("Fetching tour '" + tour_id + "'...")
