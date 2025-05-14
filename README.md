@@ -37,7 +37,7 @@ Enter your password (input hidden)
 Password:
 
 Logging in...
-Logged in as 'thepbone'
+Logged in as 'Example User'
 
 3331210XX => Example trip A (hike; 20.766km; tour_recorded)
 3331214XX => Example trip B (hike; 13.863km; tour_planned)
@@ -49,7 +49,7 @@ Fetching tours of user '153434028XXX'...
 Fetching tour '3331210XX'...
 Fetching highlight '2635XX'...
 Fetching highlight '15840XX'...
-GPX file written to '~/Development/KomootGPX/Example trip A-3331210XX.gpx'
+GPX file written to 'Example trip A-3331210XX.gpx'
 ```
 
 ### Display advanced usage information
@@ -58,6 +58,7 @@ komootgpx --help
 ```
 ```
 komootgpx.py [options]
+
 [Authentication]
         -m, --mail=mail_address            Login using specified email address
         -p, --pass=password                Use provided password and skip interactive prompt
@@ -68,19 +69,20 @@ komootgpx.py [options]
         -d, --make-gpx=tour_id             Download tour as GPX
         -a, --make-all                     Download all tours
         -s, --skip-existing                Do not download and save GPX if the file already exists, ignored with -d
+        -r, --remove-deleted               Remove GPX files (from --output dir) without corresponding tour in Komoot (deleted and previous versions)
         -I, --id-filename                  Use only tour id for filename (no title)
-        -D, --add-date                     Add date to file name
+        -D, --add-date                     Add tour date to file name
         --max-title-length=num             Crop title used in filename to given length (default: -1 = no limit)
 
 [Filters]
-        -f, --filter=type                  Filter by track type (either "planned" or "recorded")
-        --start-date                       Filter tours on or after specified date (optional, format YYYY-MM-DD)
-        --end-date                         Filter tours on or before specified date (optional, format YYYY-MM-DD)
+        -t, --tour-type=type               Filter by track type ("planned", "recorded" or "all")
+        --start-date=YYYY-MM-DD            Filter tours on or after specified date (optional)
+        --end-date=YYYY-MM-DD              Filter tours on or before specified date (optional)
 
 [Generator]
         -o, --output                       Output directory (default: working directory)
         -e, --no-poi                       Do not include highlights as POIs
-        --max-desc-length=count            Limit description length of POIs in characters (default: -1 = no limit)
+        --max-desc-length=count            Limit description length in characters (default: -1 = no limit)
 ```
 
 ### Authentication

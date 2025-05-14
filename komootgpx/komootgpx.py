@@ -1,4 +1,5 @@
 import os
+import re
 import sys
 import datetime
 
@@ -13,6 +14,7 @@ import argparse
 init()
 interactive_info_shown = False
 
+output_dir_contents = set()
 
 def usage():
     print(bcolor.HEADER + bcolor.BOLD + 'komootgpx.py [options]' + bcolor.ENDC)
@@ -27,12 +29,13 @@ def usage():
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-d', '--make-gpx=tour_id', 'Download tour as GPX'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-a', '--make-all', 'Download all tours'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-s', '--skip-existing', 'Do not download and save GPX if the file already exists, ignored with -d'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-r', '--remove-deleted', 'Remove GPX files (from --output dir) without corresponding tour in Komoot (deleted and previous versions)'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-I', '--id-filename', 'Use only tour id for filename (no title)'))
-    print('\t{:<2s}, {:<30s} {:<10s}'.format('-D', '--add-date', 'Add date to file name'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-D', '--add-date', 'Add tour date to file name'))
     print('\t{:<34s} {:<10s}'.format('--max-title-length=num', 'Crop title used in filename to given length (default: -1 = no limit)'))
 
     print('\n' + bcolor.OKBLUE + '[Filters]' + bcolor.ENDC)
-    print('\t{:<2s}, {:<30s} {:<10s}'.format('-f', '--filter=type', 'Filter by track type (either "planned" or "recorded")'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-t', '--tour-type=type', 'Filter by track type ("planned", "recorded" or "all")'))
     print('\t{:<34s} {:<10s}'.format('--start-date=YYYY-MM-DD', 'Filter tours on or after specified date (optional)'))
     print('\t{:<34s} {:<10s}'.format('--end-date=YYYY-MM-DD', 'Filter tours on or before specified date (optional)'))
 
@@ -122,7 +125,11 @@ def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, tour_base, add_dat
     else:
         filename = f"{filename}-{tour_id}"
 
-    path = f"{output_dir}/{date_str}{filename}.gpx"
+    fullname = f"{date_str}{filename}.gpx"
+    path = f"{output_dir}/{fullname}"
+
+    if fullname in output_dir_contents:
+        output_dir_contents.remove(fullname)
 
     if skip_existing and os.path.exists(path):
         print_success(f"{tour_base['name']} skipped - already exists at '{path}'")
@@ -141,10 +148,6 @@ def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, tour_base, add_dat
 
 def main(args):
 
-    tour_selection = "all" if args.make_all else args.make_gpx or ""
-    type_filter = args.tour_type
-    max_title_length = 0 if args.id_filename else args.max_title_length
-
     if args.help:
         usage()
         sys.exit(2)
@@ -152,9 +155,36 @@ def main(args):
     mail = args.mail
     pwd = args.pwd
     anonymous = args.anonymous
+
+    if anonymous and (mail is not None or pwd is not None):
+        print_error("Cannot specify login/password in anonymous mode")
+        sys.exit(2)
+
     print_tours = args.list_tours
-    tour_selection = args.make_gpx
     skip_existing = args.skip_existing
+    remove_deleted = args.remove_deleted
+
+    if args.make_all and args.make_gpx:
+        print_error("Cannot specify both -d and -a (--make-gpx and --make-all)")
+        sys.exit(2)
+
+    if args.make_all:
+        tour_selection = "all"
+    elif args.make_gpx:
+        tour_selection = args.make_gpx
+    else:
+        tour_selection = None
+
+    if anonymous and tour_selection == "all":
+        print_error("Cannot get all user's routes in anonymous mode, use -d")
+        sys.exit(2)
+
+    if remove_deleted and tour_selection != "all":
+        print_error("--remove-deleted works only with --make-all")
+        sys.exit(2)
+
+    tour_type = f"tour_{args.tour_type}"
+    max_title_length = 0 if args.id_filename else args.max_title_length
 
     if args.id_filename:
         max_title_length = 0
@@ -184,13 +214,11 @@ def main(args):
             print_error(f"Invalid end date format: {args.end_date}. Use YYYY-MM-DD")
             sys.exit(2)
 
-    if anonymous and tour_selection == "all":
-        print_error("Cannot get all user's routes in anonymous mode, use -d")
-        sys.exit(2)
-
-    if anonymous and (mail is not None or pwd is not None):
-        print_error("Cannot specify login/password in anonymous mode")
-        sys.exit(2)
+    gpxpat = re.compile(r"\.gpx$")
+    for f in os.listdir(output_dir):
+        if not os.path.isfile(f) or not gpxpat.match(f):
+            next
+        output_dir_contents.add(f)
 
     api = KomootApi()
 
@@ -206,18 +234,19 @@ def main(args):
         api.login(mail, pwd)
 
         if print_tours:
-            tours = api.fetch_tours(silent=True)
+            tours = api.fetch_tours(silent=True, tour_type=tour_type)
             list_tours(tours, start_date, end_date)
             sys.exit(0)
 
-        tours = api.fetch_tours(type_filter)
+        tours = api.fetch_tours(tour_type)
 
         tours = date_filter(tours, start_date, end_date)
 
+    #
     if tour_selection is None:
         notify_interactive()
         if not anonymous:
-            tours = api.fetch_tours(silent=True)
+            tours = api.fetch_tours(tour_type=tour_type, silent=True)
             list_tours(tours, start_date, end_date)
         tour_selection = prompt("Enter a tour id to download")
 
@@ -237,6 +266,10 @@ def main(args):
                 make_gpx(tour_selection, api, output_dir, no_poi, skip_existing, None, add_date, max_title_length, max_desc_length)
     print()
 
+    if remove_deleted:
+        for f in output_dir_contents:
+            os.unlink(f"{output_dir}/{f}")
+            print_success(f"{f} removed from {output_dir}")
 
 def entrypoint():
     args = parse_args()
@@ -263,12 +296,13 @@ def parse_args():
     parser.add_argument("-d", "--make-gpx", type=int, help="Download GPX for selected tour")
     parser.add_argument("-a", "--make-all", action="store_true", help="Download all tours")
     parser.add_argument("-s", "--skip-existing", action="store_true", help="Skip already downloaded tours")
+    parser.add_argument("-r", "--remove-deleted", action="store_true", help="Remove gpx files for nonexistent tours")
     parser.add_argument("-I", "--id-filename", action="store_true",
                         help="Use ID as filename (max title length = 0)")
     parser.add_argument("-D", "--add-date", action="store_true", help="Add date to filename")
     parser.add_argument("--max-title-length", type=int, default=-1, help="Maximum length for titles")
     parser.add_argument("--max-desc-length", type=int, default=-1, help="Maximum length for descriptions")
-    parser.add_argument("--tour-type", choices=["planned", "recorded", "all"], default="all",
+    parser.add_argument("-t", "--tour-type", choices=["planned", "recorded", "all"], default="all",
                         help="Tour type to filter")
     parser.add_argument("-o", "--output", type=str, default=os.getcwd(), help="Output directory")
     parser.add_argument("-e", "--no-poi", action="store_true", help="Do not include POIs in GPX")
