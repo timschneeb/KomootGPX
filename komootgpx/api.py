@@ -1,6 +1,7 @@
 import base64
 import json
 import requests
+import json
 
 from .utils import print_error, bcolor
 
@@ -16,18 +17,25 @@ class BasicAuthToken(requests.auth.AuthBase):
 
 
 class KomootApi:
-    def __init__(self):
+    def __init__(self, debug=False):
         self.user_id = ''
         self.token = ''
+        self.request_count = 0
+        self.debug = debug
 
     def __build_header(self):
         if self.user_id and self.token:
             return BasicAuthToken(self.user_id, self.token)
         return None
 
-    @staticmethod
-    def __send_request(url, auth, critical=True):
+    def __send_request(self, url, auth, critical=True):
+        self.request_count += 1
         r = requests.get(url, auth=auth)
+
+        if self.debug:
+            with open(f"komootgpx-debug-{self.request_count}.txt", "w") as dbgf:
+                dbgf.write(r.text)
+
         if r.status_code != 200:
             print_error("Error " + str(r.status_code) + ": " + str(r.json()))
             if critical:

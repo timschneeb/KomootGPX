@@ -45,6 +45,9 @@ def usage():
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-e', '--no-poi', 'Do not include highlights as POIs'))
     print('\t{:<34s} {:<10s}'.format('--max-desc-length=count', 'Limit description length in characters (default: -1 = no limit)'))
 
+    print('\n' + bcolor.OKBLUE + '[Other]' + bcolor.ENDC)
+    print('\t{:<34s} {:<10s}'.format('--debug', 'Save all Komoot API responses in set of .txt files'))
+
 
 def is_tour_in_date_range(tour, start_date, end_date):
     """Check if a tour falls within the specified date range."""
@@ -250,7 +253,7 @@ def main(args):
             next
         output_dir_contents.add(f)
 
-    api = KomootApi()
+    api = KomootApi(debug=args.debug)
 
     if not anonymous:
         token = None
@@ -365,5 +368,6 @@ def parse_args():
     parser.add_argument("-e", "--no-poi", action="store_true", help="Do not include POIs in GPX")
     parser.add_argument("--start-date", type=str, help="Filter tours on or after this date (YYYY-MM-DD)")
     parser.add_argument("--end-date", type=str, help="Filter tours on or before this date (YYYY-MM-DD)")
+    parser.add_argument("--debug", action="store_true", default=False, help="Debug")
     parser.add_argument("-h", "--help", action="store_true", help="Prints help")
     return parser.parse_args()

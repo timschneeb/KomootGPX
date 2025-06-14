@@ -83,6 +83,9 @@ komootgpx.py [options]
         -o, --output                       Output directory (default: working directory)
         -e, --no-poi                       Do not include highlights as POIs
         --max-desc-length=count            Limit description length in characters (default: -1 = no limit)
+
+[Other]
+        --debug                            Save all Komoot API responses in set of .txt files
 ```
 
 ### Authentication
