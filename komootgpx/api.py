@@ -44,7 +44,7 @@ class KomootApi:
 
         print("Logged in as '" + r.json()['user']['displayname'] + "'")
 
-    def fetch_tours(self, tour_type="all", silent=False):
+    def fetch_tours(self, tour_type="tour_all", silent=False):
         if not silent:
             print("Fetching tours of user '" + self.user_id + "'...")
 
@@ -60,7 +60,7 @@ class KomootApi:
 
             tours = r.json()['_embedded']['tours']
             for tour in tours:
-                if tour_type != "all" and tour_type != tour['type']:
+                if tour_type != "tour_all" and tour_type != tour['type']:
                     continue
                 results[tour['id']] = tour
 

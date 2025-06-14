@@ -234,7 +234,7 @@ def main(args):
         api.login(mail, pwd)
 
         if print_tours:
-            tours = api.fetch_tours(silent=True, tour_type=tour_type)
+            tours = api.fetch_tours(tour_type=tour_type, silent=True)
             list_tours(tours, start_date, end_date)
             sys.exit(0)
 
