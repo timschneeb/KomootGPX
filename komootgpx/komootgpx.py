@@ -215,6 +215,8 @@ def main(args):
             sys.exit(2)
 
     gpxpat = re.compile(r"\.gpx$")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
     for f in os.listdir(output_dir):
         if not os.path.isfile(f) or not gpxpat.match(f):
             next
