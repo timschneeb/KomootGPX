@@ -259,6 +259,10 @@ def main(args):
                 creddata = json.load(credfile)
                 mail = creddata.get("user_id")
                 token = creddata.get("token")
+                date = creddata.get("date")
+                if datetime.now().timestamp() - date > 15*60:
+                    print("Stored credentials are outdated. Please provide login details.")
+                    token = None
                 api.display_name = creddata.get("display_name", "(token user)")
                 pwd = ""
                 if mail and token:
@@ -278,7 +282,7 @@ def main(args):
         api.login(mail, pwd, token)
 
         with open("credentials.json", "w", encoding="utf-8") as credfile:
-            creddata = {"user_id": api.user_id, "token": api.token, "display_name": api.display_name}
+            creddata = {"user_id": api.user_id, "token": api.token, "display_name": api.display_name, "date": datetime.now().timestamp()}
             json.dump(creddata, credfile)
 
         if print_tours:
