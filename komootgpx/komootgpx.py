@@ -89,6 +89,33 @@ def date_filter(tours, start_date, end_date):
     print(f"Filtered to {len(filtered_tours)} tours {date_criteria}")
     return filtered_tours
 
+def private_public_filter(tours, private_only, public_only):
+    if not private_only and not public_only:
+        return tours
+
+    filtered_tours = {}
+    for tour_id, tour in tours.items():
+        if private_only and tour.get("status", "private") == "private":
+            filtered_tours[tour_id] = tour
+        elif public_only and tour.get("status", "private") != "private":
+            filtered_tours[tour_id] = tour
+
+    filter_criteria = "private only" if private_only else "public only"
+    print(f"Filtered to {len(filtered_tours)} tours ({filter_criteria})")
+    return filtered_tours
+
+def sport_filter(tours, sport):
+    if sport is None:
+        return tours
+
+    filtered_tours = {}
+    for tour_id, tour in tours.items():
+        if tour.get("sport") == sport:
+            filtered_tours[tour_id] = tour
+
+    print(f"Filtered to {len(filtered_tours)} tours (sport: {sport})")
+    return filtered_tours
+
 def list_tours(tours, start_date, end_date):
     tours = date_filter(tours, start_date, end_date)
     print()
@@ -262,6 +289,8 @@ def main(args):
         tours = api.fetch_tours(tour_type)
 
         tours = date_filter(tours, start_date, end_date)
+        tours = private_public_filter(tours, args.private_only, args.public_only)
+        tours = sport_filter(tours, args.sport)
 
     #
     if tour_selection is None:
@@ -325,6 +354,9 @@ def parse_args():
     parser.add_argument("--max-desc-length", type=int, default=-1, help="Maximum length for descriptions")
     parser.add_argument("-t", "--tour-type", choices=["planned", "recorded", "all"], default="all",
                         help="Tour type to filter")
+    parser.add_argument("--sport", type=str, help="Sport type to filter (e.g., 'hike')")
+    parser.add_argument("--private-only", action="store_true", help="Include only private tours")
+    parser.add_argument("--public-only", action="store_true", help="Include only public tours")
     parser.add_argument("-o", "--output", type=str, default=os.getcwd(), help="Output directory")
     parser.add_argument("-e", "--no-poi", action="store_true", help="Do not include POIs in GPX")
     parser.add_argument("--start-date", type=str, help="Filter tours on or after this date (YYYY-MM-DD)")

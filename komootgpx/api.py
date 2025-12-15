@@ -84,7 +84,6 @@ class KomootApi:
                                                                                 "&timeline_highlights_fields=tips,"
                                                                                 "recommenders",
                                 self.__build_header())
-
         return r.json()
 
     def fetch_highlight_tips(self, highlight_id):
