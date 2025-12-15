@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import datetime
+import json
 
 from colorama import init
 
@@ -225,6 +226,20 @@ def main(args):
     api = KomootApi()
 
     if not anonymous:
+        token = None
+        if os.path.exists("credentials.json"):
+            with open("credentials.json", "r", encoding="utf-8") as credfile:
+                creddata = json.load(credfile)
+                mail = creddata.get("user_id")
+                token = creddata.get("token")
+                api.display_name = creddata.get("display_name", "(token user)")
+                pwd = ""
+                if mail and token:
+                    print("Using stored credentials for user:", mail)
+                else:
+                    print_error("Stored credentials are incomplete. Please provide login details.")
+                    sys.exit(1)
+
         if mail is None:
             notify_interactive()
             mail = prompt("Enter your mail address (komoot login)")
@@ -233,7 +248,11 @@ def main(args):
             notify_interactive()
             pwd = prompt_pass("Enter your password (input hidden)")
 
-        api.login(mail, pwd)
+        api.login(mail, pwd, token)
+
+        with open("credentials.json", "w", encoding="utf-8") as credfile:
+            creddata = {"user_id": api.user_id, "token": api.token, "display_name": api.display_name}
+            json.dump(creddata, credfile)
 
         if print_tours:
             tours = api.fetch_tours(tour_type=tour_type, silent=True)
