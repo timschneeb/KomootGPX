@@ -1,4 +1,5 @@
 import base64
+import json
 import requests
 
 from .utils import print_error, bcolor
@@ -33,16 +34,22 @@ class KomootApi:
                 exit(1)
         return r
 
-    def login(self, email, password):
+    def login(self, email, password, token=None):
         print("Logging in...")
 
-        r = self.__send_request("https://api.komoot.de/v006/account/email/" + email + "/",
-                                BasicAuthToken(email, password))
+        if token is None:
+            r = self.__send_request("https://api.komoot.de/v006/account/email/" + email + "/",
+                                        BasicAuthToken(email, password))
 
-        self.user_id = r.json()['username']
-        self.token = r.json()['password']
+            self.user_id = r.json()['username']
+            self.token = r.json()['password']
+            self.display_name = r.json()["user"]["displayname"]
+        else:
+            self.user_id = email
+            self.token = token
 
-        print("Logged in as '" + r.json()['user']['displayname'] + "'")
+        print("Logged in as '" + self.display_name + "'")
+        return self.user_id, self.token, self.display_name
 
     def fetch_tours(self, tour_type="tour_all", silent=False):
         if not silent:
@@ -67,7 +74,6 @@ class KomootApi:
         print("Found " + str(len(results)) + " tours")
         return results
 
-
     def fetch_tour(self, tour_id):
         print("Fetching tour '" + tour_id + "'...")
 
@@ -78,7 +84,6 @@ class KomootApi:
                                                                                 "&timeline_highlights_fields=tips,"
                                                                                 "recommenders",
                                 self.__build_header())
-
         return r.json()
 
     def fetch_highlight_tips(self, highlight_id):

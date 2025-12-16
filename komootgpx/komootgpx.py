@@ -2,6 +2,7 @@ import os
 import re
 import sys
 import datetime
+import json
 
 from colorama import init
 
@@ -86,6 +87,33 @@ def date_filter(tours, start_date, end_date):
         date_criteria = f"on or before {end_date.strftime('%Y-%m-%d')}"
 
     print(f"Filtered to {len(filtered_tours)} tours {date_criteria}")
+    return filtered_tours
+
+def private_public_filter(tours, private_only, public_only):
+    if not private_only and not public_only:
+        return tours
+
+    filtered_tours = {}
+    for tour_id, tour in tours.items():
+        if private_only and tour.get("status", "private") == "private":
+            filtered_tours[tour_id] = tour
+        elif public_only and tour.get("status", "private") != "private":
+            filtered_tours[tour_id] = tour
+
+    filter_criteria = "private only" if private_only else "public only"
+    print(f"Filtered to {len(filtered_tours)} tours ({filter_criteria})")
+    return filtered_tours
+
+def sport_filter(tours, sport):
+    if sport is None:
+        return tours
+
+    filtered_tours = {}
+    for tour_id, tour in tours.items():
+        if tour.get("sport") == sport:
+            filtered_tours[tour_id] = tour
+
+    print(f"Filtered to {len(filtered_tours)} tours (sport: {sport})")
     return filtered_tours
 
 def list_tours(tours, start_date, end_date):
@@ -215,6 +243,8 @@ def main(args):
             sys.exit(2)
 
     gpxpat = re.compile(r"\.gpx$")
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
     for f in os.listdir(output_dir):
         if not os.path.isfile(f) or not gpxpat.match(f):
             next
@@ -223,6 +253,24 @@ def main(args):
     api = KomootApi()
 
     if not anonymous:
+        token = None
+        if os.path.exists("credentials.json"):
+            with open("credentials.json", "r", encoding="utf-8") as credfile:
+                creddata = json.load(credfile)
+                mail = creddata.get("user_id")
+                token = creddata.get("token")
+                date = creddata.get("date")
+                if datetime.now().timestamp() - date > 15*60:
+                    print("Stored credentials are outdated. Please provide login details.")
+                    token = None
+                api.display_name = creddata.get("display_name", "(token user)")
+                pwd = ""
+                if mail and token:
+                    print("Using stored credentials for user:", mail)
+                else:
+                    print_error("Stored credentials are incomplete. Please provide login details.")
+                    sys.exit(1)
+
         if mail is None:
             notify_interactive()
             mail = prompt("Enter your mail address (komoot login)")
@@ -231,7 +279,11 @@ def main(args):
             notify_interactive()
             pwd = prompt_pass("Enter your password (input hidden)")
 
-        api.login(mail, pwd)
+        api.login(mail, pwd, token)
+
+        with open("credentials.json", "w", encoding="utf-8") as credfile:
+            creddata = {"user_id": api.user_id, "token": api.token, "display_name": api.display_name, "date": datetime.now().timestamp()}
+            json.dump(creddata, credfile)
 
         if print_tours:
             tours = api.fetch_tours(tour_type=tour_type, silent=True)
@@ -241,6 +293,8 @@ def main(args):
         tours = api.fetch_tours(tour_type)
 
         tours = date_filter(tours, start_date, end_date)
+        tours = private_public_filter(tours, args.private_only, args.public_only)
+        tours = sport_filter(tours, args.sport)
 
     #
     if tour_selection is None:
@@ -304,6 +358,9 @@ def parse_args():
     parser.add_argument("--max-desc-length", type=int, default=-1, help="Maximum length for descriptions")
     parser.add_argument("-t", "--tour-type", choices=["planned", "recorded", "all"], default="all",
                         help="Tour type to filter")
+    parser.add_argument("--sport", type=str, help="Sport type to filter (e.g., 'hike')")
+    parser.add_argument("--private-only", action="store_true", help="Include only private tours")
+    parser.add_argument("--public-only", action="store_true", help="Include only public tours")
     parser.add_argument("-o", "--output", type=str, default=os.getcwd(), help="Output directory")
     parser.add_argument("-e", "--no-poi", action="store_true", help="Do not include POIs in GPX")
     parser.add_argument("--start-date", type=str, help="Filter tours on or after this date (YYYY-MM-DD)")
