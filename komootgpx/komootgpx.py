@@ -39,12 +39,12 @@ def usage():
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-t', '--tour-type=type', 'Filter by track type ("planned", "recorded" or "all")'))
     print('\t{:<34s} {:<10s}'.format('--start-date=YYYY-MM-DD', 'Filter tours on or after specified date (optional)'))
     print('\t{:<34s} {:<10s}'.format('--end-date=YYYY-MM-DD', 'Filter tours on or before specified date (optional)'))
-    print('\t{:<34s} {:<10s}'.format('--sport type', 'Sport type to filter (e.g. "hike")'))
+    print('\t{:<34s} {:<10s}'.format('--sport=type', 'Sport type to filter (e.g. "hike")'))
     print('\t{:<34s} {:<10s}'.format('--private-only', 'Include only private tours'))
     print('\t{:<34s} {:<10s}'.format('--public-only', 'Include only public tours'))
 
     print('\n' + bcolor.OKBLUE + '[Generator]' + bcolor.ENDC)
-    print('\t{:<2s}, {:<30s} {:<10s}'.format('-o', '--output', 'Output directory (default: working directory)'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-o', '--output=directory', 'Output directory (default: working directory)'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-e', '--no-poi', 'Do not include highlights as POIs'))
     print('\t{:<34s} {:<10s}'.format('--max-desc-length=count', 'Limit description length in characters (default: -1 = no limit)'))
 
