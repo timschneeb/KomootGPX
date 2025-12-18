@@ -78,6 +78,9 @@ komootgpx.py [options]
         -t, --tour-type=type               Filter by track type ("planned", "recorded" or "all")
         --start-date=YYYY-MM-DD            Filter tours on or after specified date (optional)
         --end-date=YYYY-MM-DD              Filter tours on or before specified date (optional)
+        --sport type                       Sport type to filter (e.g. "hike")
+        --private-only                     Include only private tours
+        --public-only                      Include only public tours
 
 [Generator]
         -o, --output                       Output directory (default: working directory)
