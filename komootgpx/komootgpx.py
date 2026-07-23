@@ -32,6 +32,7 @@ def usage():
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-l', '--list-tours', 'List all tours of the logged in user'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-d', '--make-gpx=tour_id', 'Download single tour as GPX'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-a', '--make-all', 'Download all tours'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-R', '--recent=N', 'Download the N most recently changed tours'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-s', '--skip-existing', 'Do not download and save GPX if the file already exists, ignored with -d'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-S', '--skip-unchanged', 'Do not download and save GPX if the tour has not changed since last download, ignored with -d and -s'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-r', '--remove-deleted', 'Remove GPX files (from --output dir) without corresponding tour in Komoot (deleted and previous versions)'))
@@ -301,10 +302,17 @@ def main(args):
         print_error("Cannot specify both -d and -a (--make-gpx and --make-all)")
         sys.exit(2)
 
+    recent_n = args.recent
+    if recent_n is not None and args.make_gpx:
+        print_error("Cannot specify both -d and -R (--make-gpx and --recent)")
+        sys.exit(2)
+
     if args.make_all:
         tour_selection = "all"
     elif args.make_gpx:
         tour_selection = args.make_gpx
+    elif recent_n is not None:
+        tour_selection = "all"
     else:
         tour_selection = None
 
@@ -414,6 +422,11 @@ def main(args):
         tours = private_public_filter(tours, args.private_only, args.public_only)
         tours = sport_filter(tours, args.sport)
 
+        if recent_n is not None:
+            sorted_tours = sorted(tours.items(), key=lambda x: x[1].get('changed_at', ''), reverse=True)
+            tours = dict(sorted_tours[:recent_n])
+            print(f"Limited to {len(tours)} most recently changed tours")
+
     #
     if tour_selection is None:
         notify_interactive()
@@ -476,6 +489,7 @@ def parse_args():
     parser.add_argument("-L", "--language", type=str, default="en", help="Select description language (default=en)")
     parser.add_argument("-d", "--make-gpx", type=int, help="Download GPX for selected tour")
     parser.add_argument("-a", "--make-all", action="store_true", help="Download all tours")
+    parser.add_argument("-R", "--recent", type=int, default=None, help="Download the N most recently changed tours")
     parser.add_argument("-s", "--skip-existing", action="store_true", help="Skip already downloaded tours")
     parser.add_argument("-S", "--skip-unchanged", action="store_true", help="Skip tours that have not changed since last download")
     parser.add_argument("-r", "--remove-deleted", action="store_true", help="Remove gpx files for nonexistent tours")
