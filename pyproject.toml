@@ -24,7 +24,8 @@ dependencies = [
   "colorama",
   "idna",
   "requests",
-  "urllib3"
+  "urllib3",
+  "pyyaml>=6.0.3",
 ]
 classifiers = [
   "Development Status :: 5 - Production/Stable",

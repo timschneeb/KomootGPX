@@ -118,3 +118,13 @@ Without authentication you can download any tour that is public (i.e. Visibility
 
 In case given tour id is not available without authentication you'll receive following message: `Error 403: {'status': 403, 'error': 'AccessDenied', 'message': 'Access denied without authentication.'}`.
 
+### Auto-login via login.yaml
+Create a `login.yaml` file in the directory you run `komootgpx` from (the output directory). If present, credentials are read automatically — no `-m`/`-p` flags needed:
+
+```yaml
+email: you@example.com
+password: your-komoot-password
+```
+
+Command-line flags `-m`/`-p` override the file if both are provided.
+
