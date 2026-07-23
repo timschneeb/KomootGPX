@@ -3,6 +3,8 @@ import re
 import sys
 import argparse
 import json
+import hashlib
+import platform
 from datetime import datetime
 from colorama import init as colorama_init
 
@@ -13,7 +15,22 @@ from .utils import *
 
 # in minutes
 SESSION_TTL = 15
-CREDFILE = "credentials.json"
+
+def _get_cache_dir():
+    if platform.system() == "Linux":
+        base = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
+    elif platform.system() == "Darwin":
+        base = os.path.expanduser("~/Library/Caches")
+    elif platform.system() == "Windows":
+        base = os.environ.get("LOCALAPPDATA", os.path.expanduser("~/AppData/Local"))
+    else:
+        base = os.path.expanduser("~/.cache")
+    cache_dir = os.path.join(base, "komootgpx")
+    os.makedirs(cache_dir, exist_ok=True)
+    return cache_dir
+
+CREDFILE = os.path.join(_get_cache_dir(), "credentials.json")
+HASHFILE = os.path.join(_get_cache_dir(), "komootgpx-hashes.json")
 
 colorama_init()
 interactive_info_shown = False
@@ -33,11 +50,11 @@ def usage():
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-d', '--make-gpx=tour_id', 'Download single tour as GPX'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-a', '--make-all', 'Download all tours'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-s', '--skip-existing', 'Do not download and save GPX if the file already exists, ignored with -d'))
-    print('\t{:<2s}, {:<30s} {:<10s}'.format('-S', '--skip-unchanged', 'Do not download and save GPX if the tour has not changed since last download, ignored with -d and -s'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-S', '--skip-unchanged', 'Do not download and save GPX if the tour has not changed since last download (hash verification), ignored with -d and -s'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-r', '--remove-deleted', 'Remove GPX files (from --output dir) without corresponding tour in Komoot (deleted and previous versions)'))
-    print('\t{:<2s}, {:<30s} {:<10s}'.format('-f', '--filename-pattern=pattern', 'Specify filename pattern, default: "{title}-{id}.gpx", available fields: title, id, date, time'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-f', '--filename-pattern=pattern', 'Specify filename pattern, default: "{title}.gpx", available fields: title, id, date, time'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-I', '--id-filename', 'Use only tour id for filename (no title), equal to -f "{id}.gpx"'))
-    print('\t{:<2s}, {:<30s} {:<10s}'.format('-D', '--add-date', 'Add tour date to file name, equal to -f "{date}_{title}-{id}.gpx"'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-D', '--add-date', 'Add tour date to file name, equal to -f "{date}_{title}.gpx"'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-L', '--language', 'Select description language (fr, de, en..., default: en)'))
     print('\t{:<34s} {:<10s}'.format('--max-title-length=num', 'Crop title used in filename to given length (default: -1 = no limit)'))
 
@@ -161,6 +178,13 @@ def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, skip_unchanged, to
         tour = tour_base
 
     tour_changed_at = parse_date_str(tour_base['changed_at']).timestamp()
+    tour_hash = hashlib.md5(tour_base['changed_at'].encode()).hexdigest()
+
+    hashpath = HASHFILE
+    hashes = {}
+    if os.path.exists(hashpath):
+        with open(hashpath, "r", encoding="utf-8") as f:
+            hashes = json.load(f)
 
     file_title = sanitize_filename(tour_base['name'])
     if max_title_length == 0:
@@ -186,11 +210,22 @@ def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, skip_unchanged, to
         return
 
     if skip_unchanged and os.path.exists(path):
-        gpx_mtime = os.path.getmtime(path)
-
-        if gpx_mtime >= tour_changed_at:
+        if hashes.get(str(tour_id)) == tour_hash:
             print_success(f"{tour_base['name']} skipped - unchanged at '{path}'")
             return
+
+    # handle filename collisions (same title, different tour)
+    if os.path.exists(path):
+        counter = 2
+        base_name = fullname.rsplit(".gpx", 1)[0]
+        while True:
+            fullname = f"{base_name}_{counter}.gpx"
+            path = f"{output_dir}/{fullname}"
+            if not os.path.exists(path):
+                break
+            counter += 1
+        if fullname in output_dir_contents:
+            output_dir_contents.remove(fullname)
 
     if tour is None:
         tour = api.fetch_tour(str(tour_id), language=language)
@@ -201,6 +236,10 @@ def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, skip_unchanged, to
 
     # set file mtime/atime to the value of `changed_at` property of tour
     os.utime(path, (tour_changed_at, tour_changed_at))
+
+    hashes[str(tour_id)] = tour_hash
+    with open(hashpath, "w", encoding="utf-8") as f:
+        json.dump(hashes, f)
 
     print_success(f"GPX file written to '{path}'")
 
@@ -322,11 +361,11 @@ def main(args):
     max_desc_length = args.max_desc_length
 
     filename_pattern = args.filename_pattern
-    image_dir_pattern = "{title}-{id}_images"
+    image_dir_pattern = "{title}_images"
 
     if args.add_date:
-        filename_pattern = "{date}_{title}-{id}.gpx"
-        image_dir_pattern = "{date}_{title}-{id}_images"
+        filename_pattern = "{date}_{title}.gpx"
+        image_dir_pattern = "{date}_{title}_images"
     elif args.id_filename:
         filename_pattern = "{id}.gpx"
         image_dir_pattern = "{id}_images"
@@ -477,9 +516,9 @@ def parse_args():
     parser.add_argument("-d", "--make-gpx", type=int, help="Download GPX for selected tour")
     parser.add_argument("-a", "--make-all", action="store_true", help="Download all tours")
     parser.add_argument("-s", "--skip-existing", action="store_true", help="Skip already downloaded tours")
-    parser.add_argument("-S", "--skip-unchanged", action="store_true", help="Skip tours that have not changed since last download")
+    parser.add_argument("-S", "--skip-unchanged", action="store_true", help="Skip tours that have not changed since last download (uses hash verification)")
     parser.add_argument("-r", "--remove-deleted", action="store_true", help="Remove gpx files for nonexistent tours")
-    parser.add_argument("-f", "--filename-pattern", type=str, default="{title}-{id}.gpx", help="Filename pattern")
+    parser.add_argument("-f", "--filename-pattern", type=str, default="{title}.gpx", help="Filename pattern")
     parser.add_argument("-I", "--id-filename", action="store_true",
                         help="Use tour ID as filename")
     parser.add_argument("-D", "--add-date", action="store_true", help="Prepend filename with tour modification date")
