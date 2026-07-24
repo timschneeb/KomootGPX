@@ -126,18 +126,32 @@ You can create an optional `config.yaml` file in the directory you run `komootgp
 The config file lets you set default values for options like the filename pattern, output directory, or other CLI flags, 
 so you don't need to pass them every time. 
 
-Command-line flags always override values set in the config file.
+Command-line flags always override values set in the config file. However, currently boolean flags that were set to true in the config file cannot be unset by command-line flags.
 
-A `config.yaml.example` template file is provided in the repository. Copy it to `config.yaml` and adjust the values as a starting point.
-
-#### Auto-login
-If `email` and `password` yaml entries are added to the `config.yaml` file, credentials are read automatically, no `-m`/`-p` flags needed:
+A [`config.yaml.example`](config.yaml.example) template file is provided in the repository. Copy it to `config.yaml` and adjust the values as a starting point.
 
 ```yaml
-email: you@example.com
-password: your-komoot-password
+settings:
+    filename-pattern: "{title}-{id}.gpx"
+    max-title-length: -1
+    language: en
+    output: /path/to/output/directory
+    no-poi: false
+    karoo: false
+    add-images: false
+    all-images: false
+    skip-existing: false
+    skip-unchanged: false
+    remove-deleted: false                  
+```
+
+#### Auto-login
+If `email` and `password` yaml entries are added under an `auth` key in the `config.yaml` file, credentials are read automatically, no `-m`/`-p` flags needed:
+
+```yaml
+auth:
+    email: you@example.com
+    password: your-komoot-password
 ```
 
 Command-line flags `-m`/`-p` override the credentials configured in the file if both are provided.
-
-

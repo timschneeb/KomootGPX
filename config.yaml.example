@@ -1,2 +1,18 @@
-email: you@example.com
-password: your-komoot-password
+auth:
+    # Uncomment to use auto-login
+    #email: you@example.com                 # Komoot login email
+    #password: your-komoot-password         # Komoot login password
+
+settings:
+    filename-pattern: "{title}-{id}.gpx"    # Output filename pattern (-f)
+    max-title-length: -1                    # Max title chars (-1 = no limit)
+    language: en                            # Description language (-L)
+    output: .                               # Output directory (-o)
+    no-poi: false                           # Exclude highlights as POIs (-e)
+    karoo: false                            # Hammerhead Karoo compat mode (-K)
+    add-images: false                       # Download tour images (-i)
+    all-images: false                       # Include images from other users
+    skip-existing: false                    # Skip already downloaded tours (-s)
+    skip-unchanged: false                   # Skip unchanged tours via hash (-S)
+    remove-deleted: false                   # Remove GPX for deleted tours (-r)
+
