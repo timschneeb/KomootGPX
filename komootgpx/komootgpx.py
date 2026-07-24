@@ -78,6 +78,7 @@ def usage():
 
     print('\n' + bcolor.OKBLUE + '[Other]' + bcolor.ENDC)
     print('\t{:<34s} {:<10s}'.format('--debug', 'Save all Komoot API responses in set of .txt files'))
+    print('\t{:<34s} {:<10s}'.format('--clear-cache', 'Remove cached credentials and file hashes'))
 
 
 def is_tour_in_date_range(tour, start_date, end_date):
@@ -313,6 +314,13 @@ def main(args):
         usage()
         sys.exit(2)
 
+    if args.clear_cache:
+        for f in (CREDFILE, HASHFILE):
+            if os.path.isfile(f):
+                os.unlink(f)
+                print_success(f"Removed {f}")
+        sys.exit(0)
+
     mail = args.mail
     pwd = args.pwd
     anonymous = args.anonymous
@@ -325,7 +333,7 @@ def main(args):
 
     # Apply auth from config
     if not anonymous and not mail and not pwd:
-        auth = config.get("auth", {})
+        auth = config.get("auth") or {}
         if "email" in auth and "password" in auth:
             mail = auth["email"]
             pwd = auth["password"]
@@ -473,7 +481,7 @@ def main(args):
                     sys.exit(1)
 
         if uid and token:
-            print("Using stored credentials for user:", mail)
+            print("Using stored credentials for user:", display_name)
             api.login_with_token(uid, token, display_name)
         else:
             if mail is None:
@@ -587,5 +595,6 @@ def parse_args():
     parser.add_argument("-e", "--no-poi", action="store_true", help="Do not include POIs in GPX")
     parser.add_argument("-K", "--karoo", action="store_true", help="Save all POIs with Generic type (Hammerhead Karoo import compatibility)")
     parser.add_argument("--debug", action="store_true", default=False, help="Debug")
+    parser.add_argument("--clear-cache", action="store_true", help="Clear cached credentials and file hashes")
     parser.add_argument("-h", "--help", action="store_true", help="Prints help")
     return parser.parse_args()

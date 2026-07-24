@@ -119,6 +119,13 @@ Without authentication you can download any tour that is public (i.e. Visibility
 
 In case given tour id is not available without authentication you'll receive following message: `Error 403: {'status': 403, 'error': 'AccessDenied', 'message': 'Access denied without authentication.'}`.
 
+Once you've logged in, the API token will be cached and reused for future requests, so you don't need to re-authenticate until the token expires.
+
+> [!NOTE]
+> The API token (and tour hashes) are cached in the system's cache directory (`~/.cache/komootgpx` on Linux,
+> `~/Library/Caches/komootgpx` on macOS, `%LOCALAPPDATA%/komootgpx/Cache` on Windows).
+> Use `--clear-cache` to remove these cached files.
+
 ### Configuration file
 
 You can create an optional `config.yaml` file in the directory you run `komootgpx` from (the output directory).
