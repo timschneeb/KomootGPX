@@ -4,8 +4,8 @@ import sys
 import argparse
 import json
 import hashlib
-import platform
 import yaml
+from platformdirs import user_cache_dir
 from datetime import datetime
 from colorama import init as colorama_init
 
@@ -18,21 +18,11 @@ from .utils import *
 SESSION_TTL = 15
 
 def _get_cache_dir():
-    if platform.system() == "Linux":
-        base = os.environ.get("XDG_CACHE_HOME", os.path.expanduser("~/.cache"))
-    elif platform.system() == "Darwin":
-        base = os.path.expanduser("~/Library/Caches")
-    elif platform.system() == "Windows":
-        base = os.environ.get("LOCALAPPDATA", os.path.expanduser("~/AppData/Local"))
-    else:
-        base = os.path.expanduser("~/.cache")
-    cache_dir = os.path.join(base, "komootgpx")
-    os.makedirs(cache_dir, exist_ok=True)
-    return cache_dir
+    return user_cache_dir("komootgpx", ensure_exists=True)
 
 CREDFILE = os.path.join(_get_cache_dir(), "credentials.json")
 HASHFILE = os.path.join(_get_cache_dir(), "komootgpx-hashes.json")
-LOGINFILE = "login.yaml"
+CONFIGFILE = "config.yaml"
 
 colorama_init()
 interactive_info_shown = False
@@ -55,9 +45,9 @@ def usage():
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-s', '--skip-existing', 'Do not download and save GPX if the file already exists, ignored with -d'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-S', '--skip-unchanged', 'Do not download and save GPX if the tour has not changed since last download (hash verification), ignored with -d and -s'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-r', '--remove-deleted', 'Remove GPX files (from --output dir) without corresponding tour in Komoot (deleted and previous versions)'))
-    print('\t{:<2s}, {:<30s} {:<10s}'.format('-f', '--filename-pattern=pattern', 'Specify filename pattern, default: "{title}.gpx", available fields: title, id, date, time'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-f', '--filename-pattern=pattern', 'Specify filename pattern, default: "{title}-{id}.gpx", available fields: title, id, date, time'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-I', '--id-filename', 'Use only tour id for filename (no title), equal to -f "{id}.gpx"'))
-    print('\t{:<2s}, {:<30s} {:<10s}'.format('-D', '--add-date', 'Add tour date to file name, equal to -f "{date}_{title}.gpx"'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-D', '--add-date', 'Add tour date to file name, equal to -f "{date}_{title}-{id}.gpx"'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-L', '--language', 'Select description language (fr, de, en..., default: en)'))
     print('\t{:<34s} {:<10s}'.format('--max-title-length=num', 'Crop title used in filename to given length (default: -1 = no limit)'))
 
@@ -217,19 +207,6 @@ def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, skip_unchanged, to
             print_success(f"{tour_base['name']} skipped - unchanged at '{path}'")
             return
 
-    # handle filename collisions (same title, different tour)
-    if os.path.exists(path):
-        counter = 2
-        base_name = fullname.rsplit(".gpx", 1)[0]
-        while True:
-            fullname = f"{base_name}_{counter}.gpx"
-            path = f"{output_dir}/{fullname}"
-            if not os.path.exists(path):
-                break
-            counter += 1
-        if fullname in output_dir_contents:
-            output_dir_contents.remove(fullname)
-
     if tour is None:
         tour = api.fetch_tour(str(tour_id), language=language)
     gpx = GpxCompiler(tour, api, no_poi, max_desc_length, karoo)
@@ -331,17 +308,15 @@ def main(args):
     anonymous = args.anonymous
 
     if not anonymous and not mail and not pwd:
-        if os.path.exists(LOGINFILE):
-            with open(LOGINFILE, "r", encoding="utf-8") as f:
+        if os.path.exists(CONFIGFILE):
+            with open(CONFIGFILE, "r", encoding="utf-8") as f:
                 login_data = yaml.safe_load(f)
                 if login_data and "email" in login_data and "password" in login_data:
                     mail = login_data["email"]
                     pwd = login_data["password"]
-                    print_info(f"Read credentials from {LOGINFILE}")
+                    print_info(f"Read credentials from {CONFIGFILE}")
                     print_info(f"Logging in to user {mail}")
-                else:
-                    print_warning(f"{LOGINFILE} found but missing 'email' and/or 'password' fields")
-
+                    
     if anonymous and (mail is not None or pwd is not None):
         print_error("Cannot specify login/password in anonymous mode")
         sys.exit(2)
@@ -383,11 +358,11 @@ def main(args):
     max_desc_length = args.max_desc_length
 
     filename_pattern = args.filename_pattern
-    image_dir_pattern = "{title}_images"
+    image_dir_pattern = os.path.splitext(args.filename_pattern)[0] + "_images"
 
     if args.add_date:
-        filename_pattern = "{date}_{title}.gpx"
-        image_dir_pattern = "{date}_{title}_images"
+        filename_pattern = "{date}_" + filename_pattern
+        image_dir_pattern = "{date}_" + image_dir_pattern
     elif args.id_filename:
         filename_pattern = "{id}.gpx"
         image_dir_pattern = "{id}_images"
@@ -546,7 +521,7 @@ def parse_args():
     parser.add_argument("-s", "--skip-existing", action="store_true", help="Skip already downloaded tours")
     parser.add_argument("-S", "--skip-unchanged", action="store_true", help="Skip tours that have not changed since last download (uses hash verification)")
     parser.add_argument("-r", "--remove-deleted", action="store_true", help="Remove gpx files for nonexistent tours")
-    parser.add_argument("-f", "--filename-pattern", type=str, default="{title}.gpx", help="Filename pattern")
+    parser.add_argument("-f", "--filename-pattern", type=str, default="{title}-{id}.gpx", help="Filename pattern")
     parser.add_argument("-I", "--id-filename", action="store_true",
                         help="Use tour ID as filename")
     parser.add_argument("-D", "--add-date", action="store_true", help="Prepend filename with tour modification date")
