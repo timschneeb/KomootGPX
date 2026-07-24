@@ -223,7 +223,10 @@ def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, skip_unchanged, to
 
     print_success(f"GPX file written to '{path}'")
 
-def download_tour_images(tour_id, api, output_dir, no_poi, skip_existing, tour_base, image_dir_pattern, max_title_length, all_images):
+def download_tour_images(tour_id, api, output_dir, no_poi, skip_existing, tour_base, image_dir_pattern, max_title_length, all_images, language="en"):
+    if tour_base is None:
+        tour_base = api.fetch_tour(str(tour_id), language=language)
+
     image_dir_contents = set()
     images = api.fetch_tour_images(str(tour_id), silent=False)
 
@@ -470,7 +473,7 @@ def main(args):
         for x in tours:
             make_gpx(x, api, output_dir, no_poi, skip_existing, skip_unchanged, tours[x], filename_pattern, max_title_length, max_desc_length, language, karoo)
             if add_images and not anonymous:
-                download_tour_images(x, api, output_dir, no_poi, skip_existing, tours[x], image_dir_pattern, max_title_length, all_images)
+                download_tour_images(x, api, output_dir, no_poi, skip_existing, tours[x], image_dir_pattern, max_title_length, all_images, language)
     else:
         if anonymous:
             make_gpx(tour_selection, api, output_dir, no_poi, False, False, None, filename_pattern, max_title_length, max_desc_length, language, karoo)
@@ -480,11 +483,11 @@ def main(args):
             if int(tour_selection) in tours:
                 make_gpx(tour_selection, api, output_dir, no_poi, skip_existing, skip_unchanged, tours[int(tour_selection)], filename_pattern, max_title_length, max_desc_length, language, karoo)
                 if add_images:
-                    download_tour_images(tour_selection, api, output_dir, no_poi, skip_existing, tours[int(tour_selection)], image_dir_pattern, max_title_length, all_images)
+                    download_tour_images(tour_selection, api, output_dir, no_poi, skip_existing, tours[int(tour_selection)], image_dir_pattern, max_title_length, all_images, language)
             else:
                 make_gpx(tour_selection, api, output_dir, no_poi, skip_existing, skip_unchanged, None, filename_pattern, max_title_length, max_desc_length, language, karoo)
                 if add_images:
-                    download_tour_images(tour_selection, api, output_dir, no_poi, skip_existing, None, image_dir_pattern, max_title_length, all_images)
+                    download_tour_images(tour_selection, api, output_dir, no_poi, skip_existing, None, image_dir_pattern, max_title_length, all_images, language)
     print()
 
     if remove_deleted:
