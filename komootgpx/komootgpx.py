@@ -3,6 +3,7 @@ import re
 import sys
 import argparse
 import json
+import yaml
 from datetime import datetime
 from colorama import init as colorama_init
 
@@ -14,6 +15,7 @@ from .utils import *
 # in minutes
 SESSION_TTL = 15
 CREDFILE = "credentials.json"
+LOGINFILE = "login.yaml"
 
 colorama_init()
 interactive_info_shown = False
@@ -288,6 +290,18 @@ def main(args):
     mail = args.mail
     pwd = args.pwd
     anonymous = args.anonymous
+
+    if not anonymous and not mail and not pwd:
+        if os.path.exists(LOGINFILE):
+            with open(LOGINFILE, "r", encoding="utf-8") as f:
+                login_data = yaml.safe_load(f)
+                if login_data and "email" in login_data and "password" in login_data:
+                    mail = login_data["email"]
+                    pwd = login_data["password"]
+                    print_info(f"Read credentials from {LOGINFILE}")
+                    print_info(f"Logging in to user {mail}")
+                else:
+                    print_warning(f"{LOGINFILE} found but missing 'email' and/or 'password' fields")
 
     if anonymous and (mail is not None or pwd is not None):
         print_error("Cannot specify login/password in anonymous mode")
