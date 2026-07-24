@@ -74,7 +74,7 @@ komootgpx.py [options]
         -s, --skip-existing                Do not download and save GPX if the file already exists,
                                                 ignored with -d
         -S, --skip-unchanged               Do not download and save GPX if the tour has not changed since
-                                                last download, ignored with -d and -s
+                                                last download (uses hash verification), ignored with -d and -s
         -r, --remove-deleted               Remove GPX files (from --output dir) without corresponding tour
                                                 in Komoot (deleted and previous versions)
         -f, --filename-pattern=pattern     Specify filename pattern, default: "{title}-{id}.gpx",
@@ -119,13 +119,46 @@ Without authentication you can download any tour that is public (i.e. Visibility
 
 In case given tour id is not available without authentication you'll receive following message: `Error 403: {'status': 403, 'error': 'AccessDenied', 'message': 'Access denied without authentication.'}`.
 
-### Auto-login via login.yaml
-Create a `login.yaml` file in the directory you run `komootgpx` from (the output directory). If present, credentials are read automatically — no `-m`/`-p` flags needed:
+Once you've logged in, the API token will be cached and reused for future requests, so you don't need to re-authenticate until the token expires.
+
+> [!NOTE]
+> The API token (and tour hashes) are cached in the system's cache directory (`~/.cache/komootgpx` on Linux,
+> `~/Library/Caches/komootgpx` on macOS, `%LOCALAPPDATA%/komootgpx/Cache` on Windows).
+> Use `--clear-cache` to remove these cached files.
+
+### Configuration file
+
+You can create an optional `config.yaml` file in the directory you run `komootgpx` from (the output directory).
+
+The config file lets you set default values for options like the filename pattern, output directory, or other CLI flags, 
+so you don't need to pass them every time. 
+
+Command-line flags always override values set in the config file. However, currently boolean flags that were set to true in the config file cannot be unset by command-line flags.
+
+A [`config.yaml.example`](config.yaml.example) template file is provided in the repository. Copy it to `config.yaml` and adjust the values as a starting point.
 
 ```yaml
-email: you@example.com
-password: your-komoot-password
+settings:
+    filename-pattern: "{title}-{id}.gpx"
+    max-title-length: -1
+    language: en
+    output: /path/to/output/directory
+    no-poi: false
+    karoo: false
+    add-images: false
+    all-images: false
+    skip-existing: false
+    skip-unchanged: false
+    remove-deleted: false                  
 ```
 
-Command-line flags `-m`/`-p` override the file if both are provided.
+#### Auto-login
+If `email` and `password` yaml entries are added under an `auth` key in the `config.yaml` file, credentials are read automatically, no `-m`/`-p` flags needed:
 
+```yaml
+auth:
+    email: you@example.com
+    password: your-komoot-password
+```
+
+Command-line flags `-m`/`-p` override the credentials configured in the file if both are provided.

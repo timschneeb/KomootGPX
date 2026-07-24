@@ -3,7 +3,10 @@ import re
 import sys
 import argparse
 import json
+import hashlib
+import shutil
 import yaml
+from platformdirs import user_cache_dir
 from datetime import datetime
 from colorama import init as colorama_init
 
@@ -14,8 +17,19 @@ from .utils import *
 
 # in minutes
 SESSION_TTL = 15
-CREDFILE = "credentials.json"
-LOGINFILE = "login.yaml"
+
+def _get_cache_dir():
+    return user_cache_dir("komootgpx", ensure_exists=True)
+
+CREDFILE = os.path.join(_get_cache_dir(), "credentials.json")
+HASHFILE = os.path.join(_get_cache_dir(), "komootgpx-hashes.json")
+CONFIGFILE = "config.yaml"
+
+# Migrate credentials from old working-dir location to cache dir,
+# only if the new location does not exist yet.
+_old_credfile = "credentials.json"
+if os.path.isfile(_old_credfile) and not os.path.isfile(CREDFILE):
+    shutil.move(_old_credfile, CREDFILE)
 
 colorama_init()
 interactive_info_shown = False
@@ -36,7 +50,7 @@ def usage():
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-a', '--make-all', 'Download all tours'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-R', '--recent=N', 'Download the N most recently changed tours'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-s', '--skip-existing', 'Do not download and save GPX if the file already exists, ignored with -d'))
-    print('\t{:<2s}, {:<30s} {:<10s}'.format('-S', '--skip-unchanged', 'Do not download and save GPX if the tour has not changed since last download, ignored with -d and -s'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-S', '--skip-unchanged', 'Do not download and save GPX if the tour has not changed since last download (hash verification), ignored with -d and -s'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-r', '--remove-deleted', 'Remove GPX files (from --output dir) without corresponding tour in Komoot (deleted and previous versions)'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-f', '--filename-pattern=pattern', 'Specify filename pattern, default: "{title}-{id}.gpx", available fields: title, id, date, time'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-I', '--id-filename', 'Use only tour id for filename (no title), equal to -f "{id}.gpx"'))
@@ -64,6 +78,7 @@ def usage():
 
     print('\n' + bcolor.OKBLUE + '[Other]' + bcolor.ENDC)
     print('\t{:<34s} {:<10s}'.format('--debug', 'Save all Komoot API responses in set of .txt files'))
+    print('\t{:<34s} {:<10s}'.format('--clear-cache', 'Remove cached credentials and file hashes'))
 
 
 def is_tour_in_date_range(tour, start_date, end_date):
@@ -153,8 +168,8 @@ def list_tours(tours, start_date, end_date):
 
 def notify_interactive():
     global interactive_info_shown
-    interactive_info_shown = True
-    if interactive_info_shown:
+    if not interactive_info_shown:
+        interactive_info_shown = True
         print("Interactive mode. Use '--help' for usage details.")
 
 def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, skip_unchanged, tour_base, filename_pattern, max_title_length, max_desc_length, language, karoo=False):
@@ -164,6 +179,13 @@ def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, skip_unchanged, to
         tour = tour_base
 
     tour_changed_at = parse_date_str(tour_base['changed_at']).timestamp()
+    tour_hash = hashlib.md5(tour_base['changed_at'].encode()).hexdigest()
+
+    hashpath = HASHFILE
+    hashes = {}
+    if os.path.exists(hashpath):
+        with open(hashpath, "r", encoding="utf-8") as f:
+            hashes = json.load(f)
 
     file_title = sanitize_filename(tour_base['name'])
     if max_title_length == 0:
@@ -189,9 +211,7 @@ def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, skip_unchanged, to
         return
 
     if skip_unchanged and os.path.exists(path):
-        gpx_mtime = os.path.getmtime(path)
-
-        if gpx_mtime >= tour_changed_at:
+        if hashes.get(str(tour_id)) == tour_hash:
             print_success(f"{tour_base['name']} skipped - unchanged at '{path}'")
             return
 
@@ -205,9 +225,16 @@ def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, skip_unchanged, to
     # set file mtime/atime to the value of `changed_at` property of tour
     os.utime(path, (tour_changed_at, tour_changed_at))
 
+    hashes[str(tour_id)] = tour_hash
+    with open(hashpath, "w", encoding="utf-8") as f:
+        json.dump(hashes, f)
+
     print_success(f"GPX file written to '{path}'")
 
-def download_tour_images(tour_id, api, output_dir, no_poi, skip_existing, tour_base, image_dir_pattern, max_title_length, all_images):
+def download_tour_images(tour_id, api, output_dir, no_poi, skip_existing, tour_base, image_dir_pattern, max_title_length, all_images, language="en"):
+    if tour_base is None:
+        tour_base = api.fetch_tour(str(tour_id), language=language)
+
     image_dir_contents = set()
     images = api.fetch_tour_images(str(tour_id), silent=False)
 
@@ -287,21 +314,67 @@ def main(args):
         usage()
         sys.exit(2)
 
+    if args.clear_cache:
+        for f in (CREDFILE, HASHFILE):
+            if os.path.isfile(f):
+                os.unlink(f)
+                print_success(f"Removed {f}")
+        sys.exit(0)
+
     mail = args.mail
     pwd = args.pwd
     anonymous = args.anonymous
 
+    # Load config
+    config = {}
+    if os.path.exists(CONFIGFILE):
+        with open(CONFIGFILE, "r", encoding="utf-8") as f:
+            config = yaml.safe_load(f) or {}
+
+    # Apply auth from config
     if not anonymous and not mail and not pwd:
-        if os.path.exists(LOGINFILE):
-            with open(LOGINFILE, "r", encoding="utf-8") as f:
-                login_data = yaml.safe_load(f)
-                if login_data and "email" in login_data and "password" in login_data:
-                    mail = login_data["email"]
-                    pwd = login_data["password"]
-                    print_info(f"Read credentials from {LOGINFILE}")
-                    print_info(f"Logging in to user {mail}")
-                else:
-                    print_warning(f"{LOGINFILE} found but missing 'email' and/or 'password' fields")
+        auth = config.get("auth") or {}
+        if "email" in auth and "password" in auth:
+            mail = auth["email"]
+            pwd = auth["password"]
+            print_info(f"Read credentials from {CONFIGFILE}")
+            print_info(f"Logging in to user {mail}")
+
+    # Apply settings from config (override argparse defaults)
+    settings = config.get("settings", {})
+    if "filename-pattern" in settings and args.filename_pattern is None:
+        args.filename_pattern = settings["filename-pattern"]
+    if "max-title-length" in settings and args.max_title_length is None:
+        args.max_title_length = settings["max-title-length"]
+    if "output" in settings and args.output is None:
+        args.output = settings["output"]
+    if "language" in settings and args.language is None:
+        args.language = settings["language"]
+    # Note: boolean flags set from the config can currently not be unset using cmdline flags
+    if "no-poi" in settings and args.no_poi is False:
+        args.no_poi = settings["no-poi"]
+    if "karoo" in settings and args.karoo is False:
+        args.karoo = settings["karoo"]
+    if "add-images" in settings and args.add_images is False:
+        args.add_images = settings["add-images"]
+    if "all-images" in settings and args.all_images is False:
+        args.all_images = settings["all-images"]
+    if "skip-existing" in settings and args.skip_existing is False:
+        args.skip_existing = settings["skip-existing"]
+    if "skip-unchanged" in settings and args.skip_unchanged is False:
+        args.skip_unchanged = settings["skip-unchanged"]
+    if "remove-deleted" in settings and args.remove_deleted is False:
+        args.remove_deleted = settings["remove-deleted"]
+
+    # Apply final defaults for anything still None
+    if args.filename_pattern is None:
+        args.filename_pattern = "{title}-{id}.gpx"
+    if args.max_title_length is None:
+        args.max_title_length = -1
+    if args.output is None:
+        args.output = os.getcwd()             
+    if args.language is None:
+        args.language = "en"
 
     if anonymous and (mail is not None or pwd is not None):
         print_error("Cannot specify login/password in anonymous mode")
@@ -344,11 +417,11 @@ def main(args):
     max_desc_length = args.max_desc_length
 
     filename_pattern = args.filename_pattern
-    image_dir_pattern = "{title}-{id}_images"
+    image_dir_pattern = os.path.splitext(args.filename_pattern)[0] + "_images"
 
     if args.add_date:
-        filename_pattern = "{date}_{title}-{id}.gpx"
-        image_dir_pattern = "{date}_{title}-{id}_images"
+        filename_pattern = "{date}_" + filename_pattern
+        image_dir_pattern = "{date}_" + image_dir_pattern
     elif args.id_filename:
         filename_pattern = "{id}.gpx"
         image_dir_pattern = "{id}_images"
@@ -356,7 +429,7 @@ def main(args):
     output_dir = args.output
     no_poi = args.no_poi
     karoo = args.karoo
-    add_images = args.add_images
+    add_images = args.add_images or args.all_images
     language = args.language
     all_images = args.all_images
 
@@ -408,7 +481,7 @@ def main(args):
                     sys.exit(1)
 
         if uid and token:
-            print("Using stored credentials for user:", mail)
+            print("Using stored credentials for user:", display_name)
             api.login_with_token(uid, token, display_name)
         else:
             if mail is None:
@@ -431,7 +504,6 @@ def main(args):
             sys.exit(0)
 
         tours = api.fetch_tours(tour_type)
-
         tours = date_filter(tours, start_date, end_date)
         tours = private_public_filter(tours, args.private_only, args.public_only)
         tours = sport_filter(tours, args.sport)
@@ -456,7 +528,7 @@ def main(args):
         for x in tours:
             make_gpx(x, api, output_dir, no_poi, skip_existing, skip_unchanged, tours[x], filename_pattern, max_title_length, max_desc_length, language, karoo)
             if add_images and not anonymous:
-                download_tour_images(x, api, output_dir, no_poi, skip_existing, tours[x], image_dir_pattern, max_title_length, all_images)
+                download_tour_images(x, api, output_dir, no_poi, skip_existing, tours[x], image_dir_pattern, max_title_length, all_images, language)
     else:
         if anonymous:
             make_gpx(tour_selection, api, output_dir, no_poi, False, False, None, filename_pattern, max_title_length, max_desc_length, language, karoo)
@@ -466,11 +538,11 @@ def main(args):
             if int(tour_selection) in tours:
                 make_gpx(tour_selection, api, output_dir, no_poi, skip_existing, skip_unchanged, tours[int(tour_selection)], filename_pattern, max_title_length, max_desc_length, language, karoo)
                 if add_images:
-                    download_tour_images(tour_selection, api, output_dir, no_poi, skip_existing, tours[int(tour_selection)], image_dir_pattern, max_title_length, all_images)
+                    download_tour_images(tour_selection, api, output_dir, no_poi, skip_existing, tours[int(tour_selection)], image_dir_pattern, max_title_length, all_images, language)
             else:
                 make_gpx(tour_selection, api, output_dir, no_poi, skip_existing, skip_unchanged, None, filename_pattern, max_title_length, max_desc_length, language, karoo)
                 if add_images:
-                    download_tour_images(tour_selection, api, output_dir, no_poi, skip_existing, None, image_dir_pattern, max_title_length, all_images)
+                    download_tour_images(tour_selection, api, output_dir, no_poi, skip_existing, None, image_dir_pattern, max_title_length, all_images, language)
     print()
 
     if remove_deleted:
@@ -486,9 +558,6 @@ def entrypoint():
         print()
         print_error(f"Aborted by user: {e}")
         sys.exit(1)
-    # except Exception as e:
-    #     print(f"Something else went wrong: {e}")
-    #     sys.exit(1)
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -500,18 +569,18 @@ def parse_args():
     parser.add_argument("-p", "--pass", dest="pwd", type=str, help="Password for login")
     parser.add_argument("-n", "--anonymous", action="store_true", default=False, help="Login anonymously")
     parser.add_argument("-l", "--list-tours", action="store_true", help="Print available tours")
-    parser.add_argument("-L", "--language", type=str, default="en", help="Select description language (default=en)")
+    parser.add_argument("-L", "--language", type=str, default=None, help="Select description language (default=en)")
     parser.add_argument("-d", "--make-gpx", type=int, help="Download GPX for selected tour")
     parser.add_argument("-a", "--make-all", action="store_true", help="Download all tours")
     parser.add_argument("-R", "--recent", type=int, default=None, help="Download the N most recently changed tours")
     parser.add_argument("-s", "--skip-existing", action="store_true", help="Skip already downloaded tours")
-    parser.add_argument("-S", "--skip-unchanged", action="store_true", help="Skip tours that have not changed since last download")
+    parser.add_argument("-S", "--skip-unchanged", action="store_true", help="Skip tours that have not changed since last download (uses hash verification)")
     parser.add_argument("-r", "--remove-deleted", action="store_true", help="Remove gpx files for nonexistent tours")
-    parser.add_argument("-f", "--filename-pattern", type=str, default="{title}-{id}.gpx", help="Filename pattern")
+    parser.add_argument("-f", "--filename-pattern", type=str, default=None, help="Filename pattern")
     parser.add_argument("-I", "--id-filename", action="store_true",
                         help="Use tour ID as filename")
     parser.add_argument("-D", "--add-date", action="store_true", help="Prepend filename with tour modification date")
-    parser.add_argument("--max-title-length", type=int, default=-1, help="Maximum length for titles")
+    parser.add_argument("--max-title-length", type=int, default=None, help="Maximum length for titles")
     parser.add_argument("--max-desc-length", type=int, default=-1, help="Maximum length for descriptions")
     parser.add_argument("-t", "--tour-type", choices=["planned", "recorded", "all"], default="all",
                         help="Tour type to filter")
@@ -520,11 +589,12 @@ def parse_args():
     parser.add_argument("--sport", type=str, help="Sport type to filter (e.g., 'hike')")
     parser.add_argument("--private-only", action="store_true", help="Include only private tours")
     parser.add_argument("--public-only", action="store_true", help="Include only public tours")
-    parser.add_argument("-o", "--output", type=str, default=os.getcwd(), help="Output directory")
-    parser.add_argument("-i", "--add-images", action="store_true", default=False, help="Add tour images")
-    parser.add_argument("--all-images", action="store_true", default=False, help="Download images from other users too - please review the copyright")
+    parser.add_argument("-o", "--output", type=str, default=None, help="Output directory")
+    parser.add_argument("-i", "--add-images", action="store_true", default=None, help="Add tour images")
+    parser.add_argument("--all-images", action="store_true", default=None, help="Download images from other users too - please review the copyright")
     parser.add_argument("-e", "--no-poi", action="store_true", help="Do not include POIs in GPX")
     parser.add_argument("-K", "--karoo", action="store_true", help="Save all POIs with Generic type (Hammerhead Karoo import compatibility)")
     parser.add_argument("--debug", action="store_true", default=False, help="Debug")
+    parser.add_argument("--clear-cache", action="store_true", help="Clear cached credentials and file hashes")
     parser.add_argument("-h", "--help", action="store_true", help="Prints help")
     return parser.parse_args()

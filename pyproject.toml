@@ -26,6 +26,7 @@ dependencies = [
   "requests",
   "urllib3",
   "pyyaml>=6.0.3",
+  "platformdirs",
 ]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
