@@ -70,6 +70,7 @@ komootgpx.py [options]
         -l, --list-tours                   List all tours of the logged in user
         -d, --make-gpx=tour_id             Download tour as GPX
         -a, --make-all                     Download all tours
+        -R, --recent=N                     Download the N most recently changed tours
         -s, --skip-existing                Do not download and save GPX if the file already exists,
                                                 ignored with -d
         -S, --skip-unchanged               Do not download and save GPX if the tour has not changed since
