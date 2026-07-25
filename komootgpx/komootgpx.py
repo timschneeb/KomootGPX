@@ -394,6 +394,10 @@ def main(args):
         print_error("Cannot specify both -d and -R (--make-gpx and --recent)")
         sys.exit(2)
 
+    if recent_n is not None and args.make_all:
+        print_error("Cannot specify both -a and -R (--make-all and --recent)")
+        sys.exit(2)
+
     if args.make_all:
         tour_selection = "all"
     elif args.make_gpx:
@@ -407,7 +411,7 @@ def main(args):
         print_error("Cannot get all user's routes in anonymous mode, use -d")
         sys.exit(2)
 
-    if remove_deleted and tour_selection != "all":
+    if remove_deleted and not args.make_all:
         print_error("--remove-deleted works only with --make-all")
         sys.exit(2)
 
@@ -454,9 +458,8 @@ def main(args):
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
     for f in os.listdir(output_dir):
-        if not os.path.isfile(f) or not gpxpat.match(f):
-            continue
-        output_dir_contents.add(f)
+        if os.path.isfile(os.path.join(output_dir, f)) and gpxpat.search(f):
+            output_dir_contents.add(f)
 
     api = KomootApi(debug=args.debug)
 
@@ -543,11 +546,10 @@ def main(args):
                 make_gpx(tour_selection, api, output_dir, no_poi, skip_existing, skip_unchanged, None, filename_pattern, max_title_length, max_desc_length, language, karoo)
                 if add_images:
                     download_tour_images(tour_selection, api, output_dir, no_poi, skip_existing, None, image_dir_pattern, max_title_length, all_images, language)
-    print()
 
     if remove_deleted:
         for f in output_dir_contents:
-            os.unlink(f"{output_dir}/{f}")
+            os.unlink(os.path.join(output_dir, f))
             print_success(f"{f} removed from {output_dir}")
 
 def entrypoint():
