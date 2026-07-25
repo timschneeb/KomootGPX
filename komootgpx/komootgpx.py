@@ -394,6 +394,10 @@ def main(args):
         print_error("Cannot specify both -d and -R (--make-gpx and --recent)")
         sys.exit(2)
 
+    if recent_n is not None and args.make_all:
+        print_error("Cannot specify both -a and -R (--make-all and --recent)")
+        sys.exit(2)
+
     if args.make_all:
         tour_selection = "all"
     elif args.make_gpx:
