@@ -32,7 +32,7 @@ public-only: false                       #     Include only public tours
 
 # --- Generator ---
 output: .                                # -o  Output directory (default: working directory)
-poi: true                                # -e  Include highlights as POIs; false == -e / --no-poi
+poi: true                                #     Include highlights as POIs; false == -e / --no-poi
 karoo: false                             # -K  Save all POIs with Generic type (Karoo compatibility)
 max-desc-length: -1                      #     Crop description to N chars (-1 = no limit)
 
