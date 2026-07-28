@@ -559,6 +559,10 @@ def parse_args():
         usage()
         sys.exit(0)
 
+    if args.version:
+        print(f"komootgpx {__version__}")
+        sys.exit(0)
+
     if args.clear_cache:
         for f in (CREDFILE, HASHFILE):
             if os.path.isfile(f):
