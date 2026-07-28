@@ -167,7 +167,7 @@ class GpxCompiler:
         track.segments.append(segment)
 
         augment_timestamp = self.route[0].time == 0
-        start_date = datetime.strptime(self.tour['changed_at'], "%Y-%m-%dT%H:%M:%S.%f%z")
+        start_date = datetime.strptime(self.tour['date'], "%Y-%m-%dT%H:%M:%S.%f%z")
 
         for coord in self.route:
             point = gpxpy.gpx.GPXTrackPoint(coord.lat, coord.lng)
