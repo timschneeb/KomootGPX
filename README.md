@@ -100,6 +100,7 @@ komootgpx.py [options]
 [Other]
         --debug                            Save all Komoot API responses in set of .txt files
         --clear-cache                      Remove cached credentials and file hashes
+        -v, --version                      Print version and exit
 ```
 
 ### Authentication
