@@ -83,13 +83,13 @@ def usage():
 
 def is_tour_in_date_range(tour, start_date, end_date):
     """Check if a tour falls within the specified date range."""
-    if 'changed_at' not in tour:
-        if 'date' in tour:
-            tour['changed_at'] = tour['date']
+    if 'date' not in tour:
+        if 'changed_at' in tour:
+            tour['date'] = tour['changed_at']
         else:
             return True  # If tour has no date info (both date and changed_at), include it
 
-    tour_date_str = tour['changed_at'][:10]  # Extract YYYY-MM-DD
+    tour_date_str = tour['date'][:10]  # Extract YYYY-MM-DD
     tour_date = datetime.strptime(tour_date_str, "%Y-%m-%d").date()
 
     # If only start_date is provided, include all tours on or after start_date
@@ -194,8 +194,8 @@ def make_gpx(tour_id, api, output_dir, no_poi, skip_existing, skip_unchanged, to
         file_title = file_title[:max_title_length]
 
     filename = filename_pattern.format(
-        date = tour_base['changed_at'][:10],
-        time = re.sub(r'.*T(\d+):(\d+):(\d+).*', '\1:\2:\3', tour_base['changed_at']),
+        date = tour_base['date'][:10],
+        time = re.sub(r'.*T(\d+):(\d+):(\d+).*', '\1:\2:\3', tour_base['date']),
         title = file_title,
         id = tour_id
         )
@@ -249,8 +249,8 @@ def download_tour_images(tour_id, api, output_dir, no_poi, skip_existing, tour_b
             file_title = file_title[:max_title_length]
 
         image_dir_name = image_dir_pattern.format(
-            date = tour_base['changed_at'][:10],
-            time = re.sub(r'.*T(\d+):(\d+):(\d+).*', '\1:\2:\3', tour_base['changed_at']),
+            date = tour_base['date'][:10],
+            time = re.sub(r'.*T(\d+):(\d+):(\d+).*', '\1:\2:\3', tour_base['date']),
             title = file_title,
             id = tour_id
             )
