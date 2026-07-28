@@ -512,15 +512,19 @@ def main(args):
             list_tours(tours, start_date, end_date)
             sys.exit(0)
 
-        tours = api.fetch_tours(tour_type)
-        tours = date_filter(tours, start_date, end_date)
-        tours = private_public_filter(tours, args.private_only, args.public_only)
-        tours = sport_filter(tours, args.sport)
+        have_full_tour_list = tour_selection == "all" or tour_selection is None
+        if have_full_tour_list:
+            tours = api.fetch_tours(tour_type)
+            tours = date_filter(tours, start_date, end_date)
+            tours = private_public_filter(tours, args.private_only, args.public_only)
+            tours = sport_filter(tours, args.sport)
 
-        if recent_n is not None:
-            sorted_tours = sorted(tours.items(), key=lambda x: x[1].get('changed_at', ''), reverse=True)
-            tours = dict(sorted_tours[:recent_n])
-            print(f"Limited to {len(tours)} most recently changed tours")
+            if recent_n is not None:
+                sorted_tours = sorted(tours.items(), key=lambda x: x[1].get('changed_at', ''), reverse=True)
+                tours = dict(sorted_tours[:recent_n])
+                print(f"Limited to {len(tours)} most recently changed tours")
+        else:
+            tours = {}
 
     #
     if tour_selection is None:
@@ -530,7 +534,7 @@ def main(args):
             list_tours(tours, start_date, end_date)
         tour_selection = prompt("Enter a tour id to download")
 
-    if not anonymous and tour_selection != "all" and int(tour_selection) not in tours:
+    if not anonymous and tour_selection != "all" and have_full_tour_list and int(tour_selection) not in tours:
         print_warning(f"Warning: This id ({tour_selection}) is not one of your tours. Use --list-tours to view complete list.")
 
     if tour_selection == "all":
