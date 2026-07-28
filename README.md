@@ -89,6 +89,7 @@ komootgpx.py [options]
 
 [Generator]
         -o, --output=directory             Output directory (default: working directory)
+        --poi                              Include highlights as POIs (default behavior)
         -e, --no-poi                       Do not include highlights as POIs
         -K, --karoo                        Save all POIs with Generic type (Hammerhead Karoo import compatibility)
         --max-desc-length=count            Limit description length in characters (default: -1 = no limit)
@@ -127,32 +128,55 @@ You can create an optional `config.yaml` file in the directory you run `komootgp
 The config file lets you set default values for options like the filename pattern, output directory, or other CLI flags, 
 so you don't need to pass them every time. 
 
-Command-line flags always override values set in the config file. However, currently boolean flags that were set to true in the config file cannot be unset by command-line flags.
+Command-line flags always override values set in the config file. Boolean flags that were set to true in the config file can be unset with long negated flag, e.g. `--no-remove-deleted`.
 
 A [`config.yaml.example`](config.yaml.example) template file is provided in the repository. Copy it to `config.yaml` and adjust the values as a starting point.
 
 ```yaml
-settings:
-    filename-pattern: "{title}-{id}.gpx"
-    max-title-length: -1
-    language: en
-    output: /path/to/output/directory
-    no-poi: false
-    karoo: false
-    add-images: false
-    all-images: false
-    skip-existing: false
-    skip-unchanged: false
-    remove-deleted: false                  
+# KomootGPX configuration file (config.yaml)
+#
+# Every key is a long command-line option name without the leading "--".
+# Values set here override the built-in defaults, and are in turn overridden by options given on the command line.
+
+# --- Authentication ---
+# email:                                 # -m  Login email (default: prompt)
+# password:                              # -p  Login password (default: prompt)
+anonymous: false                         # -n  Skip authentication (valid only with -d)
+
+# --- Tours ---
+list-tours: false                        # -l  List all tours and exit
+# make-gpx:                              # -d  Download single tour by id (default: unset)
+make-all: false                          # -a  Download all tours
+# recent:                                # -R  Download the N most recently changed tours (default: unset)
+skip-existing: false                     # -s  Skip tours whose file already exists
+skip-unchanged: false                    # -S  Skip tours unchanged since last download (hash check)
+remove-deleted: false                    # -r  Remove GPX files without a corresponding tour
+filename-pattern: "{title}-{id}.gpx"     # -f  Filename pattern (fields: title, id, date, time)
+id-filename: false                       # -I  Use only tour id as filename (= -f "{id}.gpx")
+add-date: false                          # -D  Prepend tour date (= -f "{date}_{title}-{id}.gpx")
+language: en                             # -L  Description language (fr, de, en, ...)
+max-title-length: -1                     #     Crop title in filename to N chars (-1 = no limit)
+
+# --- Filters ---
+tour-type: all                           # -t  Track type: planned, recorded or all
+# start-date:                            #     Include tours on or after YYYY-MM-DD (default: unset)
+# end-date:                              #     Include tours on or before YYYY-MM-DD (default: unset)
+# sport:                                 #     Sport type filter, e.g. hike (default: unset)
+private-only: false                      #     Include only private tours
+public-only: false                       #     Include only public tours
+
+# --- Generator ---
+output: .                                # -o  Output directory (default: working directory)
+poi: true                                # -e  Include highlights as POIs; false == -e / --no-poi
+karoo: false                             # -K  Save all POIs with Generic type (Karoo compatibility)
+max-desc-length: -1                      #     Crop description to N chars (-1 = no limit)
+
+# --- Images ---
+all-images: false                        #     Download images from other users too (check copyright)
+add-images: false                        # -i  Download tour images
+
+# --- Other ---
+debug: false                             #     Save all Komoot API responses to .txt files
+clear-cache: false                       #     Remove cached credentials and file hashes, then exit
 ```
 
-#### Auto-login
-If `email` and `password` yaml entries are added under an `auth` key in the `config.yaml` file, credentials are read automatically, no `-m`/`-p` flags needed:
-
-```yaml
-auth:
-    email: you@example.com
-    password: your-komoot-password
-```
-
-Command-line flags `-m`/`-p` override the credentials configured in the file if both are provided.

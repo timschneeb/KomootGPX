@@ -1,18 +1,45 @@
-auth:
-    # Uncomment to use auto-login
-    #email: you@example.com                 # Komoot login email
-    #password: your-komoot-password         # Komoot login password
+# KomootGPX configuration file (config.yaml)
+#
+# Every key is a long command-line option name without the leading "--".
+# Values set here override the built-in defaults, and are in turn overridden by options given on the command line.
 
-settings:
-    filename-pattern: "{title}-{id}.gpx"    # Output filename pattern (-f)
-    max-title-length: -1                    # Max title chars (-1 = no limit)
-    language: en                            # Description language (-L)
-    output: .                               # Output directory (-o)
-    no-poi: false                           # Exclude highlights as POIs (-e)
-    karoo: false                            # Hammerhead Karoo compat mode (-K)
-    add-images: false                       # Download tour images (-i)
-    all-images: false                       # Include images from other users
-    skip-existing: false                    # Skip already downloaded tours (-s)
-    skip-unchanged: false                   # Skip unchanged tours via hash (-S)
-    remove-deleted: false                   # Remove GPX for deleted tours (-r)
+# --- Authentication ---
+# email:                                 # -m  Login email (default: prompt)
+# password:                              # -p  Login password (default: prompt)
+anonymous: false                         # -n  Skip authentication (valid only with -d)
 
+# --- Tours ---
+list-tours: false                        # -l  List all tours and exit
+# make-gpx:                              # -d  Download single tour by id (default: unset)
+make-all: false                          # -a  Download all tours
+# recent:                                # -R  Download the N most recently changed tours (default: unset)
+skip-existing: false                     # -s  Skip tours whose file already exists
+skip-unchanged: false                    # -S  Skip tours unchanged since last download (hash check)
+remove-deleted: false                    # -r  Remove GPX files without a corresponding tour
+filename-pattern: "{title}-{id}.gpx"     # -f  Filename pattern (fields: title, id, date, time)
+id-filename: false                       # -I  Use only tour id as filename (= -f "{id}.gpx")
+add-date: false                          # -D  Prepend tour date (= -f "{date}_{title}-{id}.gpx")
+language: en                             # -L  Description language (fr, de, en, ...)
+max-title-length: -1                     #     Crop title in filename to N chars (-1 = no limit)
+
+# --- Filters ---
+tour-type: all                           # -t  Track type: planned, recorded or all
+# start-date:                            #     Include tours on or after YYYY-MM-DD (default: unset)
+# end-date:                              #     Include tours on or before YYYY-MM-DD (default: unset)
+# sport:                                 #     Sport type filter, e.g. hike (default: unset)
+private-only: false                      #     Include only private tours
+public-only: false                       #     Include only public tours
+
+# --- Generator ---
+output: .                                # -o  Output directory (default: working directory)
+poi: true                                # -e  Include highlights as POIs; false == -e / --no-poi
+karoo: false                             # -K  Save all POIs with Generic type (Karoo compatibility)
+max-desc-length: -1                      #     Crop description to N chars (-1 = no limit)
+
+# --- Images ---
+all-images: false                        #     Download images from other users too (check copyright)
+add-images: false                        # -i  Download tour images
+
+# --- Other ---
+debug: false                             #     Save all Komoot API responses to .txt files
+clear-cache: false                       #     Remove cached credentials and file hashes, then exit

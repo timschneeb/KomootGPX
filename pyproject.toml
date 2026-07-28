@@ -22,6 +22,7 @@ dependencies = [
   "gpxpy",
   "pillow",
   "colorama",
+  "configargparse",
   "idna",
   "requests",
   "urllib3",
