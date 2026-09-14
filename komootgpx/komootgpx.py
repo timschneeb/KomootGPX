@@ -217,7 +217,7 @@ def make_gpx(cfg, tour_id, tour_base):
 
     filename = cfg.filename_pattern.format(
         date = tour_base['date'][:10],
-        time = re.sub(r'.*T(\d+):(\d+):(\d+).*', '\1:\2:\3', tour_base['date']),
+        time = re.sub(r'.*T(\d+):(\d+):(\d+).*', r'\1:\2:\3', tour_base['date']),
         title = file_title,
         id = tour_id
         )
@@ -271,7 +271,7 @@ def download_tour_images(cfg, tour_id, tour_base):
 
         image_dir_name = cfg.image_dir_pattern.format(
             date = tour_base['date'][:10],
-            time = re.sub(r'.*T(\d+):(\d+):(\d+).*', '\1:\2:\3', tour_base['date']),
+            time = re.sub(r'.*T(\d+):(\d+):(\d+).*', r'\1:\2:\3', tour_base['date']),
             title = file_title,
             id = tour_id
             )
