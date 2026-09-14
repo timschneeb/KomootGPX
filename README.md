@@ -24,6 +24,11 @@ To run from local clone of repo (without installation):
 uv run python -m komootgpx --help
 ```
 
+Run the offline regression tests:
+```
+uv run python -m unittest discover -s tests -v
+```
+
 ## Usage
 
 ### Run script in interactive mode
