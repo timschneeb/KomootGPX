@@ -73,6 +73,7 @@ komootgpx.py [options]
 [Tours]
         -l, --list-tours                   List all tours of the logged in user
         -d, --make-gpx=tour_id             Download single tour as GPX
+        -u, --make-gpx-url=url             Download single tour as GPX from its Komoot URL (supports share links)
         -a, --make-all                     Download all tours
         -R, --recent=N                     Download the N most recently changed tours
         -s, --skip-existing                Do not download and save GPX if the file already exists, ignored with -d
@@ -151,6 +152,7 @@ anonymous: false                         # -n  Skip authentication (valid only w
 # --- Tours ---
 list-tours: false                        # -l  List all tours and exit
 # make-gpx:                              # -d  Download single tour by id (default: unset)
+# make-gpx-url:                          # -u  Download single tour by Komoot URL, incl. share_token (default: unset)
 make-all: false                          # -a  Download all tours
 # recent:                                # -R  Download the N most recently changed tours (default: unset)
 skip-existing: false                     # -s  Skip tours whose file already exists

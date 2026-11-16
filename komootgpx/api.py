@@ -22,6 +22,7 @@ class KomootApi:
         self.token = ''
         self.request_count = 0
         self.debug = debug
+        self.share_token = None
 
     def __build_header(self):
         if self.user_id and self.token:
@@ -95,7 +96,8 @@ class KomootApi:
                                                                                 "timeline&hl=" + language + "&directions=v2&fields"
                                                                                 "=timeline&format=coordinate_array"
                                                                                 "&timeline_highlights_fields=tips,"
-                                                                                "recommenders",
+                                                                                "recommenders"
+                                                                                + ("&share_token=" + self.share_token if self.share_token else ""),
                                 self.__build_header())
         return r.json()
 

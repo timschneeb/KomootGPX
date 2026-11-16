@@ -50,6 +50,7 @@ def usage():
     print('\n' + bcolor.OKBLUE + '[Tours]' + bcolor.ENDC)
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-l', '--list-tours', 'List all tours of the logged in user'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-d', '--make-gpx=tour_id', 'Download single tour as GPX'))
+    print('\t{:<2s}, {:<30s} {:<10s}'.format('-u', '--make-gpx-url=url', 'Download single tour as GPX from its Komoot URL (supports share links)'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-a', '--make-all', 'Download all tours'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-R', '--recent=N', 'Download the N most recently changed tours'))
     print('\t{:<2s}, {:<30s} {:<10s}'.format('-s', '--skip-existing', 'Do not download and save GPX if the file already exists, ignored with -d'))
@@ -335,11 +336,20 @@ def main(args):
         os.makedirs(output_dir)
 
     process_images = args.add_images or args.all_images
+    share_token = None
 
     if args.make_all:
         tour_selection = "all"
     elif args.make_gpx:
         tour_selection = args.make_gpx
+    elif args.make_gpx_url:
+        m = re.search(r"/tour/(\d+)", args.make_gpx_url)
+        if not m:
+            print_error("Could not find a tour id in the given URL")
+            sys.exit(1)
+        tour_selection = m.group(1)
+        t = re.search(r"[?&]share_token=([^&#]+)", args.make_gpx_url)
+        share_token = t.group(1) if t else None
     elif args.recent is not None:
         tour_selection = "all"
     else:
@@ -364,6 +374,7 @@ def main(args):
                 output_dir_contents.add(f)
 
     api = KomootApi(debug=args.debug)
+    api.share_token = share_token
 
     cfg = RunConfig(
         api=api,
@@ -514,6 +525,7 @@ def parse_args():
 
     parser.add_argument("-l", "--list-tours", action="store_true", help="Print available tours")
     parser.add_argument("-d", "--make-gpx", type=int, help="Download GPX for selected tour")
+    parser.add_argument("-u", "--make-gpx-url", type=str, help="Download GPX for a tour given its Komoot URL (supports share links with share_token)")
     parser.add_argument("-a", "--make-all", action="store_true", help="Download all tours")
     parser.add_argument("-R", "--recent", type=int, default=None, help="Download the N most recently changed tours")
     # NOTE: for BooleanOptionalAction the long option MUST be listed before the
